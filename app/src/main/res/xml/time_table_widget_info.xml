@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:configure="jp.gr.java_conf.ya.timetablewidget.TimeTableWidgetConfigureActivity"
+    android:initialKeyguardLayout="@layout/time_table_widget"
+    android:initialLayout="@layout/time_table_widget"
+    android:minHeight="40dp"
+    android:minWidth="40dp"
+    android:previewImage="@drawable/example_appwidget_preview"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="86400000"
+    android:widgetCategory="home_screen"></appwidget-provider><!-- Copyright (c) 2018 YA <ya.androidapp@gmail.com> All rights reserved. -->
