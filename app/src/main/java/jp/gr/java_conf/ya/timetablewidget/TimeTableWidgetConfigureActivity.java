@@ -32,7 +32,7 @@ public class TimeTableWidgetConfigureActivity extends Activity {
             saveTitlePref(context, mAppWidgetId, widgetText);
 
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
-            TimeTableWidget.updateAppWidget(context, appWidgetManager, mAppWidgetId);
+            TimeTableWidget.updateAppWidget(context, appWidgetManager, mAppWidgetId, "");
 
             Intent resultValue = new Intent();
             resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
