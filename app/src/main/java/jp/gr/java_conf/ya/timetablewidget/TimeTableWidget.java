@@ -1,20 +1,12 @@
 package jp.gr.java_conf.ya.timetablewidget; // Copyright (c) 2018 YA <ya.androidapp@gmail.com> All rights reserved.
 
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
-import android.location.Location;
 import android.os.Build;
 import android.widget.RemoteViews;
-
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.SettingsClient;
 
 /**
  * Implementation of App Widget functionality.
@@ -46,7 +38,6 @@ public class TimeTableWidget extends AppWidgetProvider {
         } else {
             context.startService(new Intent(context, TimeTableWidgetService.class));
         }
-
 
         for (int appWidgetId : appWidgetIds)
             updateAppWidget(context, appWidgetManager, appWidgetId, "");

@@ -13,15 +13,14 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.Toast;
 
 /**
  * The configuration screen for the {@link TimeTableWidget TimeTableWidget} AppWidget.
  */
 public class TimeTableWidgetConfigureActivity extends Activity {
-    private final int REQUEST_PERMISSION = 1;
     private static final String PREFS_NAME = "jp.gr.java_conf.ya.timetablewidget.TimeTableWidget";
     private static final String PREF_PREFIX_KEY = "appwidget_";
+    private final int REQUEST_PERMISSION = 1;
     int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
     EditText mAppWidgetText;
     View.OnClickListener mOnClickListener = new View.OnClickListener() {
@@ -91,7 +90,7 @@ public class TimeTableWidgetConfigureActivity extends Activity {
 
         mAppWidgetText.setText(loadTitlePref(TimeTableWidgetConfigureActivity.this, mAppWidgetId));
 
-        if(Build.VERSION.SDK_INT >= 23)
+        if (Build.VERSION.SDK_INT >= 23)
             checkPermission();
     }
 

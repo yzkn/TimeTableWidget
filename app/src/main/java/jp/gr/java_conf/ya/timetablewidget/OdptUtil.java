@@ -7,24 +7,38 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URL;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import static jp.gr.java_conf.ya.timetablewidget.AsyncDlTask.buildQueryString;
 
 public class OdptUtil {
+    private static final int startHourOfDay = 4;
+    private static final int marginMinute = 10;
     String BASE_URI = "https://api-tokyochallenge.odpt.org/api/v4/";
     String HEADER = "{\"data\" : ";
     String FOOTER = "}";
 
-    private static final int startHourOfDay = 4;
-    private static final int marginMinute = 10;
+    public static Calendar getT0day() {
+        return getT0day(0);
+    }
+
+    public static Calendar getT0day(int altMargin) {
+        final Date now = new Date();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(now);
+        calendar.add(Calendar.MINUTE, marginMinute + altMargin);
+        return calendar;
+    }
+
+    public static String getDateString(Date date) {
+        java.sql.Date t0daySql = new java.sql.Date(date.getTime());
+        return t0daySql.toString();
+    }
 
     public void acquirePlaces(Map<String, String> querys) {
         String endPoint = "places";
@@ -54,6 +68,9 @@ public class OdptUtil {
 
                             Map<String, String> querysAcquireStation = new HashMap<String, String>();
                             querysAcquireStation.put("owl:sameAs", uriStation);
+
+                            // TODO: 現在地と駅との距離も取得
+
                             (new OdptUtil()).acquireStationTimetable(querysAcquireStation);
                         }
                     } catch (JSONException e) {
@@ -65,15 +82,7 @@ public class OdptUtil {
         }
     }
 
-    private Calendar getDateWithMargin(){
-        final Date now = new Date();
-        Calendar calendarNow = Calendar.getInstance();
-        calendarNow.setTime(now);
-        calendarNow.add(Calendar.MINUTE, marginMinute);
-        return calendarNow;
-    }
-
-    private TreeMap<Integer, Map<String, String>> stationTimetableObjectArrayToTreeMap(JSONArray stationTimetableObjectArray){
+    private TreeMap<Integer, Map<String, String>> stationTimetableObjectArrayToTreeMap(JSONArray stationTimetableObjectArray) {
         TreeMap<Integer, Map<String, String>> table = new TreeMap<>();
         for (int j = 0; j < stationTimetableObjectArray.length(); j++) {
             try {
@@ -87,16 +96,19 @@ public class OdptUtil {
                     isLast = "";
                 }
                 String trainType = stationTimetableObject.getString("odpt:trainType"); // 種別
-                String note =  departureTime + " " + trainType.substring(0, 1) + " " + destinationStation + (isLast.equals("") ? "" : " Last");
+                String note = departureTime + " " + trainType.substring(0, 1) + " " + destinationStation + (isLast.equals("") ? "" : " Last");
 
                 // 24時以降対策
-                int time28 =   ((Integer.parseInt(departureTime.substring(0,2))<startHourOfDay)?2400:0) + Integer.parseInt(departureTime.replace(":", ""));
-                if(time28 > getDateWithMargin().get(Calendar.HOUR_OF_DAY)*100+getDateWithMargin().get(Calendar.MINUTE)){
+                int time28 = ((Integer.parseInt(departureTime.substring(0, 2)) < startHourOfDay) ? 2400 : 0) + Integer.parseInt(departureTime.replace(":", ""));
+                int timeT0day = ((getT0day().get(Calendar.HOUR_OF_DAY) < startHourOfDay) ? 2400 : 0) * 100 + getT0day().get(Calendar.MINUTE);
+
+                // 現在時刻よりも後のものだけ格納
+                if (time28 > timeT0day) {
                     Map<String, String> item = new TreeMap<>();
-                    item.put( departureTime, note);
-                    table.put( time28, item);
+                    item.put(departureTime, note);
+                    table.put(time28, item);
                 }
-                Log.v("TTW", departureTime + " " +note);
+                Log.v("TTW", departureTime + " " + note);
             } catch (Exception e) {
             }
         }
@@ -123,7 +135,7 @@ public class OdptUtil {
                     Log.v("TTW", result[0]);
                     Map<String, String> resultMap = new HashMap<String, String>();
 
-                    Date dateAdd = getDateWithMargin().getTime();
+                    Date dateAdd = getT0day().getTime();
                     final SimpleDateFormat df = new SimpleDateFormat("HH:mm");
 
                     try {
@@ -152,7 +164,7 @@ public class OdptUtil {
                                     String key2 = e2.getKey();
                                     String val2 = e2.getValue();
 
-                                    Log.v("TTW", "key1: " + Integer.toString(key1)+ " key2: "+ key2 +  " val2: "+val2);
+                                    Log.v("TTW", "key1: " + Integer.toString(key1) + " key2: " + key2 + " val2: " + val2);
                                 }
                             }
                         }
