@@ -100,15 +100,16 @@ public class OdptUtil {
 
                 // 24時以降対策
                 int time28 = ((Integer.parseInt(departureTime.substring(0, 2)) < startHourOfDay) ? 2400 : 0) + Integer.parseInt(departureTime.replace(":", ""));
-                int timeT0day = ((getT0day().get(Calendar.HOUR_OF_DAY) < startHourOfDay) ? 2400 : 0) * 100 + getT0day().get(Calendar.MINUTE);
+                int timeT0day = (9 + ((getT0day().get(Calendar.HOUR_OF_DAY) < startHourOfDay) ? 24 : 0)+(getT0day().get(Calendar.HOUR_OF_DAY))) * 100 + getT0day().get(Calendar.MINUTE);
 
                 // 現在時刻よりも後のものだけ格納
                 if (time28 > timeT0day) {
                     Map<String, String> item = new TreeMap<>();
                     item.put(departureTime, note);
                     table.put(time28, item);
+
+                    Log.v("TTW", departureTime + " " + note);
                 }
-                Log.v("TTW", departureTime + " " + note);
             } catch (Exception e) {
             }
         }
