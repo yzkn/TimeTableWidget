@@ -99,7 +99,7 @@ public class TimeTableWidgetService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        log("onStartCommand()");
+        Log.v("TTWS", "onStartCommand()");
         super.onStartCommand(intent, flags, startId);
 
         startForeground(startId, new Notification());
@@ -135,25 +135,21 @@ public class TimeTableWidgetService extends Service {
     }
 
     private void init(Intent intent) {
-        BroadcastReceiver roadcastReceiver = new OnClickReceiver();
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(TimeTableWidget.ON_CLICK);
-        registerReceiver(roadcastReceiver, filter);
-
         int appWidgetId = -1;
         try {
             appWidgetId = intent.getExtras().getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
         } catch (Exception e) {
         }
-        Log.d("TTW", "appWidgetId:" + appWidgetId);
+        Log.v("TTW", "appWidgetId:" + appWidgetId);
 
         // 休日判定
         setHoliday();
 
         // Temp
-        Map<String, String> querysAcquireStation = new HashMap<String, String>();
-        querysAcquireStation.put("odpt:station", "odpt.Station:TokyoMetro.Chiyoda.Otemachi");
-        (new OdptUtil()).acquireStationTimetable(querysAcquireStation);
+         Map<String, String> querysAcquireStation = new HashMap<String, String>();
+         querysAcquireStation.put("odpt:calendar", checkIfTodayIsHoliday()); // odpt.Calendar:Holiday
+         querysAcquireStation.put("odpt:station", "odpt.Station:TokyoMetro.Chiyoda.Otemachi");
+         (new OdptUtil()).acquireStationTimetable(getApplicationContext(), querysAcquireStation);
 
         /*
 
@@ -168,7 +164,7 @@ public class TimeTableWidgetService extends Service {
 
     @Override
     public void onDestroy() {
-        log("onDestroy()");
+        Log.v("TTWS", "onDestroy()");
 
         try {
             stopLocationUpdates();
@@ -181,7 +177,7 @@ public class TimeTableWidgetService extends Service {
     @SuppressWarnings("deprecation")
     @Override
     public void onStart(Intent intent, int startId) {
-        log("onStart()");
+        Log.v("TTWS", "onStart()");
         super.onStart(intent, startId);
     }
 
@@ -194,8 +190,8 @@ public class TimeTableWidgetService extends Service {
                 Location location = locationResult.getLastLocation();
                 // location.getLatitude() location.getLongitude() location.getAccuracy()
                 // location.getAltitude() location.getSpeed() location.getBearing()
-                log("location getLatitude: " + location.getLatitude());
-                log("location getLongitude: " + location.getLongitude());
+                Log.v("TTWS", "location getLatitude: " + location.getLatitude());
+                Log.v("TTWS", "location getLongitude: " + location.getLongitude());
 
                 // Temp
                 /*
@@ -220,10 +216,6 @@ public class TimeTableWidgetService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
-
-    private void log(String str) {
-        Log.v("TTWS", str);
     }
 
     private void createLocationRequest() {
@@ -264,13 +256,19 @@ public class TimeTableWidgetService extends Service {
         }
     }
 
-    public Boolean isHoliday() {
+    public String checkIfTodayIsHoliday() {
         String checkedDay = getPref(PREF_TODAY);
         String now = getDateString(new Date());
         if (checkedDay.equals(now)) {
-            return Boolean.parseBoolean(getPref(PREF_TODAY_IS_HOLIDAY));
+            return getPref(PREF_TODAY_IS_HOLIDAY);
         } else {
-            return false;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    setHoliday();
+                }
+            }).start();
+            return "";
         }
 
     }
@@ -292,24 +290,14 @@ public class TimeTableWidgetService extends Service {
                 public void onPostExecute(String[] result) {
                     Date t0day = OdptUtil.getT0day().getTime();
                     boolean isHoliday = parseCsv(t0day, result[0]);
+                    Log.v("TTW", "checkIfTodayIsHoliday:" + Boolean.toString(isHoliday));
 
                     setPref(PREF_TODAY, getDateString(t0day));
-                    setPref(PREF_TODAY_IS_HOLIDAY, Boolean.toString(isHoliday));
+                    setPref(PREF_TODAY_IS_HOLIDAY, (isHoliday?"odpt.Calendar:Holiday":"odpt.Calendar:Weekday"));
                 }
             });
             aAsyncDlTask.execute(url);
         } catch (Exception e) {
-        }
-    }
-
-    public class OnClickReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if ("jp.co.casareal.oreobroadcastsample.ORIGINAL".equals(intent.getAction())) {
-                String massage = intent.getStringExtra("message");
-                Toast.makeText(context, massage, Toast.LENGTH_LONG).show();
-            }
         }
     }
 

@@ -55,10 +55,10 @@ public final class AsyncDlTask extends AsyncTask<URL, Integer, String[]> {
             Log.v("TTW", url.toString());
 
             final HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-            httpURLConnection.setConnectTimeout(10000);
+            httpURLConnection.setConnectTimeout(30000);
             httpURLConnection.setDoInput(true);
             httpURLConnection.setInstanceFollowRedirects(false);
-            httpURLConnection.setReadTimeout(10000);
+            httpURLConnection.setReadTimeout(30000);
             httpURLConnection.setRequestMethod("GET");
             httpURLConnection.setRequestProperty("Accept-Language", "jp");
             httpURLConnection.connect();

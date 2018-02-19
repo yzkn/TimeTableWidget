@@ -11,16 +11,11 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:layout_margin="8dp"
-        android:background="#09C"
+        android:background="#000"
         android:contentDescription="@string/appwidget_text"
         android:text="@string/appwidget_text"
-        android:textColor="#ffffff"
-        android:textSize="24sp"
+        android:textColor="#fff"
+        android:textSize="8sp"
         android:textStyle="bold|italic" />
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="" />
 
 </RelativeLayout><!-- Copyright (c) 2018 YA <ya.androidapp@gmail.com> All rights reserved. -->

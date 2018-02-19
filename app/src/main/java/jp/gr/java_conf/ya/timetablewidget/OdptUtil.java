@@ -1,5 +1,6 @@
 package jp.gr.java_conf.ya.timetablewidget; // Copyright (c) 2018 YA <ya.androidapp@gmail.com> All rights reserved.
 
+import android.content.Context;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -17,6 +18,7 @@ import java.util.TreeMap;
 import static jp.gr.java_conf.ya.timetablewidget.AsyncDlTask.buildQueryString;
 
 public class OdptUtil {
+    private static final int timetableItemCount = 5;
     private static final int startHourOfDay = 4;
     private static final int marginMinute = 10;
     String BASE_URI = "https://api-tokyochallenge.odpt.org/api/v4/";
@@ -40,7 +42,7 @@ public class OdptUtil {
         return t0daySql.toString();
     }
 
-    public void acquirePlaces(Map<String, String> querys) {
+    public void acquirePlaces(final Context context, Map<String, String> querys) {
         String endPoint = "places";
 
         try {
@@ -71,7 +73,7 @@ public class OdptUtil {
 
                             // TODO: 現在地と駅との距離も取得
 
-                            (new OdptUtil()).acquireStationTimetable(querysAcquireStation);
+                            (new OdptUtil()).acquireStationTimetable(context, querysAcquireStation);
                         }
                     } catch (JSONException e) {
                     }
@@ -96,19 +98,18 @@ public class OdptUtil {
                     isLast = "";
                 }
                 String trainType = stationTimetableObject.getString("odpt:trainType"); // 種別
-                String note = departureTime + " " + trainType.substring(0, 1) + " " + destinationStation + (isLast.equals("") ? "" : " Last");
+                String note = departureTime + " " + trainType.split("[.]")[trainType.split("[.]").length-1] + " " + destinationStation.split("[.]")[destinationStation.split("[.]").length-1] + (isLast.equals("") ? "" : " Last");
 
                 // 24時以降対策
                 int time28 = ((Integer.parseInt(departureTime.substring(0, 2)) < startHourOfDay) ? 2400 : 0) + Integer.parseInt(departureTime.replace(":", ""));
-                int timeT0day = (9 + ((getT0day().get(Calendar.HOUR_OF_DAY) < startHourOfDay) ? 24 : 0)+(getT0day().get(Calendar.HOUR_OF_DAY))) * 100 + getT0day().get(Calendar.MINUTE);
+                int timeT0day = (((getT0day().get(Calendar.HOUR_OF_DAY) < startHourOfDay) ? 2400 : 0) + getT0day().get(Calendar.HOUR_OF_DAY)) * 100 + getT0day().get(Calendar.MINUTE);
 
                 // 現在時刻よりも後のものだけ格納
                 if (time28 > timeT0day) {
                     Map<String, String> item = new TreeMap<>();
                     item.put(departureTime, note);
                     table.put(time28, item);
-
-                    Log.v("TTW", departureTime + " " + note);
+                    // Log.v("TTW", "28:"+ time28 +" t0day:"+ timeT0day +" "+ departureTime + " " + note);
                 }
             } catch (Exception e) {
             }
@@ -116,7 +117,7 @@ public class OdptUtil {
         return table;
     }
 
-    public void acquireStationTimetable(Map<String, String> querys) {
+    public void acquireStationTimetable(final Context context, Map<String, String> querys) {
         String endPoint = "odpt:StationTimetable";
 
         try {
@@ -134,7 +135,8 @@ public class OdptUtil {
 
                 public void onPostExecute(String[] result) {
                     Log.v("TTW", result[0]);
-                    Map<String, String> resultMap = new HashMap<String, String>();
+
+                    StringBuilder sb = new StringBuilder();
 
                     Date dateAdd = getT0day().getTime();
                     final SimpleDateFormat df = new SimpleDateFormat("HH:mm");
@@ -158,19 +160,29 @@ public class OdptUtil {
 
                             TreeMap<Integer, Map<String, String>> table = stationTimetableObjectArrayToTreeMap(stationTimetableObjectArray);
 
+                            int j = 0;
                             for (Map.Entry<Integer, Map<String, String>> e : table.entrySet()) {
-                                int key1 = e.getKey();
-                                Map<String, String> val1 = e.getValue();
-                                for (Map.Entry<String, String> e2 : val1.entrySet()) {
-                                    String key2 = e2.getKey();
-                                    String val2 = e2.getValue();
+                                if(j < timetableItemCount) {
+                                    int key1 = e.getKey();
+                                    Map<String, String> val1 = e.getValue();
 
-                                    Log.v("TTW", "key1: " + Integer.toString(key1) + " key2: " + key2 + " val2: " + val2);
+                                    for (Map.Entry<String, String> e2 : val1.entrySet()) {
+                                        String key2 = e2.getKey();
+                                        String val2 = e2.getValue();
+
+                                        sb.append(key2 + ": " + val2).append("\n");
+                                    }
+
+                                    j++;
                                 }
                             }
                         }
                     } catch (Exception e) {
                     }
+
+                    Log.v("TTW", sb.toString());
+
+                    TimeTableWidget.updateAppWidget(context, sb.toString());
                 }
             });
             asyncDlTask.execute(url);

@@ -3,9 +3,11 @@ package jp.gr.java_conf.ya.timetablewidget; // Copyright (c) 2018 YA <ya.android
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 /**
@@ -15,17 +17,20 @@ import android.widget.RemoteViews;
 public class TimeTableWidget extends AppWidgetProvider {
     public static final String ON_CLICK = "jp.gr.java_conf.ya.timetablewidget.ON_CLICK";
 
+    static void updateAppWidget(Context context, String message) {
+        //if(context!=null) {
+        Log.v("TTW", "updateAppWidget: " + message);
+        ComponentName thisWidget = new ComponentName(context, TimeTableWidget.class);
+        int[] appWidgetIds = AppWidgetManager.getInstance(context).getAppWidgetIds(thisWidget);
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        for (int appWidgetId : appWidgetIds)
+            updateAppWidget(context, appWidgetManager, appWidgetId, message);
+        //}
+    }
+
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId, String message) {
         // CharSequence widgetText = TimeTableWidgetConfigureActivity.loadTitlePref(context, appWidgetId);
         RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.time_table_widget);
-
-        // ボタンイベント設定
-        Intent intent = new Intent();
-        intent.setAction(ON_CLICK);
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-        PendingIntent pendingIntent = PendingIntent.getService(context, appWidgetId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        remoteViews.setOnClickPendingIntent(R.id.button, pendingIntent);
-
         remoteViews.setTextViewText(R.id.appwidget_text, message);
 
         appWidgetManager.updateAppWidget(appWidgetId, remoteViews);
@@ -40,7 +45,7 @@ public class TimeTableWidget extends AppWidgetProvider {
         }
 
         for (int appWidgetId : appWidgetIds)
-            updateAppWidget(context, appWidgetManager, appWidgetId, "");
+            updateAppWidget(context, appWidgetManager, appWidgetId, "---");
     }
 
     @Override
