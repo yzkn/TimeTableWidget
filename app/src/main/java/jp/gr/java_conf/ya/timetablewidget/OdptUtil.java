@@ -21,7 +21,7 @@ public class OdptUtil {
     private static final int timetableItemCount = 5;
     private static final int startHourOfDay = 4;
     private static final int marginMinute = 10;
-    String BASE_URI = "https://api-tokyochallenge.odpt.org/api/v4/";
+    public static final String BASE_URI = "https://api-tokyochallenge.odpt.org/api/v4/";
     String HEADER = "{\"data\" : ";
     String FOOTER = "}";
 
@@ -75,6 +75,49 @@ public class OdptUtil {
 
                             (new OdptUtil()).acquireStationTimetable(context, querysAcquireStation);
                         }
+                    } catch (JSONException e) {
+                    }
+                }
+            });
+            aAsyncDlTask.execute(url);
+        } catch (Exception e) {
+        }
+    }
+
+    public void acquireStation(final Context context, Map<String, String> querys) {
+        String endPoint = "odpt:Station";
+
+        try {
+            final URL url = new URL(buildQueryString(BASE_URI + endPoint, querys));
+            AsyncDlTask aAsyncDlTask = new AsyncDlTask(new AsyncDlTask.AsyncCallback() {
+                public void onPreExecute() {
+                }
+
+                public void onProgressUpdate(int progress) {
+                }
+
+                public void onCancelled() {
+                }
+
+                public void onPostExecute(String[] result) {
+                    Log.v("TTW", result[0]);
+
+                    try {
+                        JSONObject json = new JSONObject(HEADER + result[0] + FOOTER);
+                        JSONArray dataArray = json.getJSONArray("data");
+
+                        // for (int i = 0; i < dataArray.length(); i++) {
+                        int i = 0;
+                            JSONObject dataObject = dataArray.getJSONObject(i);
+                            String uriStation = dataObject.getString("owl:sameAs");
+                            Log.v("TTW", "uriStation: "+uriStation);
+
+                            /*
+                            Map<String, String> querysAcquireStation = new HashMap<String, String>();
+                            querysAcquireStation.put("owl:sameAs", uriStation);
+                            (new OdptUtil()).acquireStationTimetable(context, querysAcquireStation);
+                            */
+                        // }
                     } catch (JSONException e) {
                     }
                 }

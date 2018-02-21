@@ -51,6 +51,10 @@ public final class AsyncDlTask extends AsyncTask<URL, Integer, String[]> {
     }
 
     private static String downloadText(final URL url) {
+        return downloadText(url, "Shift_JIS");
+    }
+
+    private static String downloadText(final URL url, final String charsetName) {
         try {
             Log.v("TTW", url.toString());
 
@@ -64,7 +68,7 @@ public final class AsyncDlTask extends AsyncTask<URL, Integer, String[]> {
             httpURLConnection.connect();
 
             final InputStream inputStream = httpURLConnection.getInputStream();
-            final InputStreamReader objReader = new InputStreamReader(inputStream, "Shift_JIS");
+            final InputStreamReader objReader = new InputStreamReader(inputStream, charsetName);
             final BufferedReader bufferedReader = new BufferedReader(objReader);
             final StringBuilder sb = new StringBuilder();
             String line;
@@ -88,7 +92,10 @@ public final class AsyncDlTask extends AsyncTask<URL, Integer, String[]> {
         Arrays.fill(results, "");
 
         for (int i = 0; i < count; i++) {
-            results[i] = downloadText(urls[i]);
+            if(urls[i].toString().startsWith(HeartRailsUtil.BASE_URI))
+                results[i] = downloadText(urls[i], "UTF-8");
+            else
+                results[i] = downloadText(urls[i]);
             publishProgress((int) ((i / (float) count) * 100));
             if (isCancelled())
                 break;
