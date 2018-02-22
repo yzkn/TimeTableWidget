@@ -1,12 +1,15 @@
 package jp.gr.java_conf.ya.timetablewidget; // Copyright (c) 2018 YA <ya.androidapp@gmail.com> All rights reserved.
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -18,12 +21,115 @@ import java.util.TreeMap;
 import static jp.gr.java_conf.ya.timetablewidget.AsyncDlTask.buildQueryString;
 
 public class OdptUtil {
-    private static final int timetableItemCount = 5;
+    private static final int timetableItemCount = 1;
     private static final int startHourOfDay = 4;
     private static final int marginMinute = 10;
     public static final String BASE_URI = "https://api-tokyochallenge.odpt.org/api/v4/";
-    String HEADER = "{\"data\" : ";
-    String FOOTER = "}";
+    private static final String HEADER = "{\"data\" : ";
+    private static final String FOOTER = "}";
+    private static final String PREFS_NAME = "jp.gr.java_conf.ya.timetablewidget.TimeTableWidget";
+    private static final String PREF_PREFIX_KEY_ODPT = "odpt_";
+
+    private static boolean containsKeyOdptPref(Context context, String key) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
+        try {
+            return prefs.contains(PREF_PREFIX_KEY_ODPT + key);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static String loadOdptPref(Context context, String key) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
+        String titleValue = prefs.getString(PREF_PREFIX_KEY_ODPT + key, null);
+        if (titleValue != null)
+            return titleValue;
+        else
+            return "";
+    }
+
+    private static void saveOdptPref(Context context, String key, String text) {
+        SharedPreferences.Editor prefs = context.getSharedPreferences(PREFS_NAME, 0).edit();
+        prefs.putString(PREF_PREFIX_KEY_ODPT + key, text);
+        prefs.apply();
+    }
+
+    public static String getTitle(Context context, final String key) {
+        // 問い合わせ不要
+        // if (containsKeyOdptPref(context, key)) {
+        //    return loadOdptPref(context, key); // ローカルにキャッシュがある場合
+        //} else
+        if (key.equals("True")) {
+            return "*"; // 終電
+        } else if (key.startsWith("odpt.Calendar:")) {
+            if (key.equals("odpt.Calendar:Weekday"))
+                return "平日";
+            else if (key.equals("odpt.Calendar:Holiday"))
+                return "土休日";
+        } else if (key.startsWith("odpt.Operator:")) {
+            if (key.equals("odpt.Operator:JR-East"))
+                return "JR東日本";
+            else if (key.equals("odpt.Operator:Keikyu"))
+                return "京浜急行";
+            else if (key.equals("odpt.Operator:Keio"))
+                return "京王電鉄";
+            else if (key.equals("odpt.Operator:Keisei"))
+                return "京成電鉄";
+            else if (key.equals("odpt.Operator:Odakyu"))
+                return "小田急";
+            else if (key.equals("odpt.Operator:Seibu"))
+                return "西武鉄道";
+            else if (key.equals("odpt.Operator:TWR"))
+                return "東京臨海高速鉄道";
+            else if (key.equals("odpt.Operator:Tobu"))
+                return "東武鉄道";
+            else if (key.equals("odpt.Operator:Toei"))
+                return "東京都交通局";
+            else if (key.equals("odpt.Operator:TokyoMetro"))
+                return "東京メトロ";
+            else if (key.equals("odpt.Operator:Tokyu"))
+                return "東急電鉄";
+            else if (key.equals("odpt.Operator:Yurikamome"))
+                return "ゆりかもめ";
+            else
+                return "";
+        } else if (key.startsWith("odpt.TrainType:")) {
+            return key.split("[.]")[key.split("[.]").length - 1];
+        }
+
+        // return key.split("[.]")[key.split("[.]").length-1];
+
+        // odpt問い合わせ
+        String title = "";
+        Map<String, String> querysSameas = new HashMap<String, String>();
+        URL url = null;
+        try {
+            if (key.startsWith("odpt.Railway:")) {
+                querysSameas.put("owl:sameAs", key);
+                url = new URL(buildQueryString(BASE_URI + "odpt:Railway", querysSameas));
+            } else if (key.startsWith("odpt.Station:")) {
+                querysSameas.put("owl:sameAs", key);
+                url = new URL(buildQueryString(BASE_URI + "odpt:Station", querysSameas));
+            } else if (key.startsWith("odpt.RailDirection:")) {
+                querysSameas.put("owl:sameAs", key.replace("odpt.RailDirection", "odpt.Station"));
+                url = new URL(buildQueryString(BASE_URI + "odpt:Station", querysSameas));
+            }
+            if (url != null) {
+                String result = AsyncDlTask.downloadText(url, "UTF-8");
+                Log.v("TTW", "getTitle result:" + result);
+                JSONObject json = new JSONObject(HEADER + result + FOOTER);
+                JSONObject dataObject = json.getJSONArray("data").getJSONObject(0);
+                title = dataObject.getString("dc:title");
+            }
+
+            // キャッシュに保存
+            saveOdptPref(context, key, title);
+        } catch (MalformedURLException e) {
+        } catch (JSONException e) {
+        }
+
+        return title;
+    }
 
     public static Calendar getT0day() {
         return getT0day(0);
@@ -69,7 +175,7 @@ public class OdptUtil {
                             String uriStation = dataObject.getString("owl:sameAs");
 
                             Map<String, String> querysAcquireStation = new HashMap<String, String>();
-                            querysAcquireStation.put("owl:sameAs", uriStation);
+                            querysAcquireStation.put("odpt:station", uriStation);
 
                             // TODO: 現在地と駅との距離も取得
 
@@ -100,24 +206,21 @@ public class OdptUtil {
                 }
 
                 public void onPostExecute(String[] result) {
-                    Log.v("TTW", result[0]);
+                    Log.v("TTW", "acquireStation: " + result[0]);
 
                     try {
                         JSONObject json = new JSONObject(HEADER + result[0] + FOOTER);
                         JSONArray dataArray = json.getJSONArray("data");
 
-                        // for (int i = 0; i < dataArray.length(); i++) {
-                        int i = 0;
+                        for (int i = 0; i < dataArray.length(); i++) {
                             JSONObject dataObject = dataArray.getJSONObject(i);
                             String uriStation = dataObject.getString("owl:sameAs");
-                            Log.v("TTW", "uriStation: "+uriStation);
+                            Log.v("TTW", "uriStation: " + uriStation);
 
-                            /*
                             Map<String, String> querysAcquireStation = new HashMap<String, String>();
-                            querysAcquireStation.put("owl:sameAs", uriStation);
+                            querysAcquireStation.put("odpt:station", uriStation);
                             (new OdptUtil()).acquireStationTimetable(context, querysAcquireStation);
-                            */
-                        // }
+                        }
                     } catch (JSONException e) {
                     }
                 }
@@ -127,21 +230,42 @@ public class OdptUtil {
         }
     }
 
-    private TreeMap<Integer, Map<String, String>> stationTimetableObjectArrayToTreeMap(JSONArray stationTimetableObjectArray) {
-        TreeMap<Integer, Map<String, String>> table = new TreeMap<>();
+    private TreeMap<Integer, String> stationTimetableObjectArrayToTreeMap(final Context context, JSONArray stationTimetableObjectArray) {
+        TreeMap<Integer, String> table = new TreeMap<>();
         for (int j = 0; j < stationTimetableObjectArray.length(); j++) {
             try {
                 JSONObject stationTimetableObject = stationTimetableObjectArray.getJSONObject(j);
                 String departureTime = stationTimetableObject.getString("odpt:departureTime"); // 時刻
-                String destinationStation = stationTimetableObject.getString("odpt:destinationStation"); // 目的地
+
+                String destinationStation; // 目的地
+                try {
+                    if (stationTimetableObject.has("odpt:destinationStationTitle"))
+                        destinationStation = new String(stationTimetableObject.getString("odpt:destinationStationTitle").getBytes("Shift_JIS"), "UTF-8");
+                    else
+                        destinationStation = getTitle(context, stationTimetableObject.getString("odpt:destinationStation"));
+                } catch (Exception e) {
+                    destinationStation = getTitle(context, stationTimetableObject.getString("odpt:destinationStation"));
+                }
+
                 String isLast;
                 try {
-                    isLast = stationTimetableObject.getString("odpt:isLast"); // 終電
+                    isLast = getTitle(context, stationTimetableObject.getString("odpt:isLast")); // 終電
                 } catch (JSONException e) {
                     isLast = "";
                 }
-                String trainType = stationTimetableObject.getString("odpt:trainType"); // 種別
-                String note = departureTime + " " + trainType.split("[.]")[trainType.split("[.]").length-1] + " " + destinationStation.split("[.]")[destinationStation.split("[.]").length-1] + (isLast.equals("") ? "" : " Last");
+
+                String trainType; // 種別
+                try {
+                    if (stationTimetableObject.has("odpt:trainTypeTitle"))
+                        trainType = new String(stationTimetableObject.getString("odpt:trainTypeTitle").getBytes("Shift_JIS"), "UTF-8");
+                    else
+                        trainType = getTitle(context, stationTimetableObject.getString("odpt:trainType"));
+                } catch (Exception e) {
+                    trainType = getTitle(context, stationTimetableObject.getString("odpt:trainType"));
+                }
+
+                // String note = departureTime + " " + trainType.split("[.]")[trainType.split("[.]").length-1] + " " + destinationStation.split("[.]")[destinationStation.split("[.]").length-1] + (isLast.equals("") ? "" : " Last");
+                String note = departureTime + " " + trainType + " " + destinationStation + "駅行" + isLast;
 
                 // 24時以降対策
                 int time28 = ((Integer.parseInt(departureTime.substring(0, 2)) < startHourOfDay) ? 2400 : 0) + Integer.parseInt(departureTime.replace(":", ""));
@@ -149,9 +273,7 @@ public class OdptUtil {
 
                 // 現在時刻よりも後のものだけ格納
                 if (time28 > timeT0day) {
-                    Map<String, String> item = new TreeMap<>();
-                    item.put(departureTime, note);
-                    table.put(time28, item);
+                    table.put(time28, note);
                     // Log.v("TTW", "28:"+ time28 +" t0day:"+ timeT0day +" "+ departureTime + " " + note);
                 }
             } catch (Exception e) {
@@ -176,56 +298,87 @@ public class OdptUtil {
                 public void onCancelled() {
                 }
 
-                public void onPostExecute(String[] result) {
-                    Log.v("TTW", result[0]);
+                public void onPostExecute(final String[] result) {
+                    Log.v("TTW", "acquireStationTimetable: " + result[0]);
 
-                    StringBuilder sb = new StringBuilder();
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
 
-                    Date dateAdd = getT0day().getTime();
-                    final SimpleDateFormat df = new SimpleDateFormat("HH:mm");
+                            StringBuilder sb = new StringBuilder();
 
-                    try {
-                        Date date0400 = df.parse("04:00");
+                            Date dateAdd = getT0day().getTime();
+                            final SimpleDateFormat df = new SimpleDateFormat("HH:mm");
 
-                        JSONObject json = new JSONObject(HEADER + result[0] + FOOTER);
-                        JSONArray dataArray = json.getJSONArray("data");
+                            try {
+                                Date date0400 = df.parse("04:00");
 
-                        for (int i = 0; i < dataArray.length(); i++) {
-                            JSONObject dataObject = dataArray.getJSONObject(i);
+                                JSONObject json = new JSONObject(HEADER + result[0] + FOOTER);
+                                JSONArray dataArray = json.getJSONArray("data");
 
-                            String railway = dataObject.getString("odpt:railway");
-                            String station = dataObject.getString("odpt:station");
-                            String calendar = dataObject.getString("odpt:calendar");
-                            String operator = dataObject.getString("odpt:operator");
-                            String railDirection = dataObject.getString("odpt:railDirection");
-                            String stationTimetableObject_ = dataObject.getString("odpt:stationTimetableObject");
-                            JSONArray stationTimetableObjectArray = dataObject.getJSONArray("odpt:stationTimetableObject");
+                                for (int i = 0; i < dataArray.length(); i++) {
+                                    JSONObject dataObject = dataArray.getJSONObject(i);
 
-                            TreeMap<Integer, Map<String, String>> table = stationTimetableObjectArrayToTreeMap(stationTimetableObjectArray);
 
-                            int j = 0;
-                            for (Map.Entry<Integer, Map<String, String>> e : table.entrySet()) {
-                                if(j < timetableItemCount) {
-                                    int key1 = e.getKey();
-                                    Map<String, String> val1 = e.getValue();
-
-                                    for (Map.Entry<String, String> e2 : val1.entrySet()) {
-                                        String key2 = e2.getKey();
-                                        String val2 = e2.getValue();
-
-                                        sb.append(key2 + ": " + val2).append("\n");
+                                    String railway;
+                                    try {
+                                        if (dataObject.has("odpt:railwayTitle"))
+                                            railway = new String(dataObject.getString("odpt:railwayTitle").getBytes("Shift_JIS"), "UTF-8");
+                                        else
+                                            railway = getTitle(context, dataObject.getString("odpt:railway"));
+                                    } catch (Exception e) {
+                                        railway = getTitle(context, dataObject.getString("odpt:railway"));
                                     }
 
-                                    j++;
+                                    String station;
+                                    try {
+                                        if (dataObject.has("odpt:stationTitle"))
+                                            station = new String(dataObject.getString("odpt:stationTitle").getBytes("Shift_JIS"), "UTF-8");
+                                        else
+                                            station = getTitle(context, dataObject.getString("odpt:station"));
+                                    } catch (Exception e) {
+                                        station = getTitle(context, dataObject.getString("odpt:station"));
+                                    }
+
+                                    String calendar = dataObject.getString("odpt:calendar");
+                                    String operator = dataObject.getString("odpt:operator");
+
+                                    String railDirection;
+                                    try {
+                                        if (dataObject.has("odpt:railDirectionTitle"))
+                                            railDirection = new String(dataObject.getString("odpt:railDirectionTitle").getBytes("Shift_JIS"), "UTF-8");
+                                        else
+                                            railDirection = getTitle(context, dataObject.getString("odpt:railDirection"));
+                                    } catch (Exception e) {
+                                        railDirection = getTitle(context, dataObject.getString("odpt:railDirection"));
+                                    }
+
+                                    String note = station + "駅 " + railway + "線";
+                                    Log.v("TTW", "note: " + note + " " + railDirection);
+
+                                    // String stationTimetableObject_ = dataObject.getString("odpt:stationTimetableObject");
+                                    JSONArray stationTimetableObjectArray = dataObject.getJSONArray("odpt:stationTimetableObject");
+
+                                    TreeMap<Integer, String> table = stationTimetableObjectArrayToTreeMap(context, stationTimetableObjectArray);
+
+                                    int j = 0;
+                                    for (Map.Entry<Integer, String> e : table.entrySet()) {
+                                        if (j < timetableItemCount) {
+                                            int key = e.getKey();
+                                            String val = e.getValue();
+                                            sb.append(note + ": " + val).append("\n");
+                                            j++;
+                                        }
+                                    }
                                 }
+                            } catch (Exception e) {
                             }
+
+                            Log.v("TTW", "sb: " + sb.toString());
+
+                            TimeTableWidget.updateAppWidget(context, sb.toString());
                         }
-                    } catch (Exception e) {
-                    }
-
-                    Log.v("TTW", sb.toString());
-
-                    TimeTableWidget.updateAppWidget(context, sb.toString());
+                    }).start();
                 }
             });
             asyncDlTask.execute(url);
