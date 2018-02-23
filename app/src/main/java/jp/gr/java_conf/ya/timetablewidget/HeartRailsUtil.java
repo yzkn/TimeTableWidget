@@ -41,13 +41,7 @@ public class HeartRailsUtil {
                         for (int i = 0; i < dataArray.length(); i++) {
                             JSONObject dataObject = dataArray.getJSONObject(i);
                             String uriStation = dataObject.getString("name");
-                            // Log.v("TTW", "uriStation: "+uriStation);
-
-                            // TODO: 現在地と駅との距離も取得
                             String uriDistance = dataObject.getString("distance");
-                            // GeoUtil.getMinutes()
-                            // Log.v("TTW", "uriDistance: "+uriDistance);
-
                             Map<String, String> querysAcquireStation = new HashMap<String, String>();
                             querysAcquireStation.put("dc:title", uriStation);
                             (new OdptUtil()).acquireStation(context, querysAcquireStation);

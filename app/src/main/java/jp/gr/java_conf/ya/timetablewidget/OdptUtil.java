@@ -2,6 +2,8 @@ package jp.gr.java_conf.ya.timetablewidget; // Copyright (c) 2018 YA <ya.android
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.location.Location;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -23,35 +25,49 @@ import static jp.gr.java_conf.ya.timetablewidget.AsyncDlTask.buildQueryString;
 public class OdptUtil {
     private static final int timetableItemCount = 1;
     private static final int startHourOfDay = 4;
-    private static final int marginMinute = 10;
+    private static final int commonMarginMinute = 10;
+    private static SharedPreferences pref_app;
     public static final String BASE_URI = "https://api-tokyochallenge.odpt.org/api/v4/";
-    private static final String HEADER = "{\"data\" : ";
-    private static final String FOOTER = "}";
-    private static final String PREFS_NAME = "jp.gr.java_conf.ya.timetablewidget.TimeTableWidget";
+    public static final String HEADER = "{\"data\" : ";
+    public static final String FOOTER = "}";
+    public static final String PREF_CURRENT_LAT = "PREF_CURRENT_LAT";
+    public static final String PREF_CURRENT_LON = "PREF_CURRENT_LON";
     private static final String PREF_PREFIX_KEY_ODPT = "odpt_";
 
-    private static boolean containsKeyOdptPref(Context context, String key) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
+    public static boolean containsKeyOdptPref(Context context, String key) {
+        if (pref_app == null)
+            pref_app = PreferenceManager.getDefaultSharedPreferences(context);
+
         try {
-            return prefs.contains(PREF_PREFIX_KEY_ODPT + key);
+            return pref_app.contains(PREF_PREFIX_KEY_ODPT + key);
         } catch (Exception e) {
             return false;
         }
     }
 
-    private static String loadOdptPref(Context context, String key) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
-        String titleValue = prefs.getString(PREF_PREFIX_KEY_ODPT + key, null);
-        if (titleValue != null)
-            return titleValue;
-        else
-            return "";
+    public static String loadOdptPref(Context context, String key) {
+        if (pref_app == null)
+            pref_app = PreferenceManager.getDefaultSharedPreferences(context);
+
+        String value;
+        try {
+            value = pref_app.getString(PREF_PREFIX_KEY_ODPT + key, "");
+        } catch (Exception e) {
+            value = "";
+        }
+        return value;
     }
 
-    private static void saveOdptPref(Context context, String key, String text) {
-        SharedPreferences.Editor prefs = context.getSharedPreferences(PREFS_NAME, 0).edit();
-        prefs.putString(PREF_PREFIX_KEY_ODPT + key, text);
-        prefs.apply();
+    public static void saveOdptPref(Context context, String key, String value) {
+        if (pref_app == null)
+            pref_app = PreferenceManager.getDefaultSharedPreferences(context);
+
+        try {
+            SharedPreferences.Editor editor = pref_app.edit();
+            editor.putString(PREF_PREFIX_KEY_ODPT + key, value);
+            editor.apply();
+        } catch (Exception e) {
+        }
     }
 
     public static String getTitle(Context context, final String key) {
@@ -139,7 +155,7 @@ public class OdptUtil {
         final Date now = new Date();
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(now);
-        calendar.add(Calendar.MINUTE, marginMinute + altMargin);
+        calendar.add(Calendar.MINUTE, commonMarginMinute + altMargin);
         return calendar;
     }
 
@@ -172,14 +188,15 @@ public class OdptUtil {
 
                         for (int i = 0; i < dataArray.length(); i++) {
                             JSONObject dataObject = dataArray.getJSONObject(i);
-                            String uriStation = dataObject.getString("owl:sameAs");
+                            // TODO: 現在地と駅との距離も取得
+                            Location currentLocation = GeoUtil.createLocation( loadOdptPref(context, PREF_CURRENT_LAT), loadOdptPref(context, PREF_CURRENT_LON));
+                            Location stationLocation = GeoUtil.createLocation( dataObject.getString("lat"), dataObject.getString("lon"));
+                            int marginMinute = GeoUtil.getMinutes( currentLocation.distanceTo(stationLocation));
 
+                            String uriStation = dataObject.getString("owl:sameAs");
                             Map<String, String> querysAcquireStation = new HashMap<String, String>();
                             querysAcquireStation.put("odpt:station", uriStation);
-
-                            // TODO: 現在地と駅との距離も取得
-
-                            (new OdptUtil()).acquireStationTimetable(context, querysAcquireStation);
+                            (new OdptUtil()).acquireStationTimetable(context, querysAcquireStation, marginMinute);
                         }
                     } catch (JSONException e) {
                     }
@@ -214,12 +231,14 @@ public class OdptUtil {
 
                         for (int i = 0; i < dataArray.length(); i++) {
                             JSONObject dataObject = dataArray.getJSONObject(i);
-                            String uriStation = dataObject.getString("owl:sameAs");
-                            Log.v("TTW", "uriStation: " + uriStation);
+                            Location currentLocation = GeoUtil.createLocation( loadOdptPref(context, PREF_CURRENT_LAT), loadOdptPref(context, PREF_CURRENT_LON));
+                            Location stationLocation = GeoUtil.createLocation( dataObject.getString("geo:lat"), dataObject.getString("geo:long"));
+                            int marginMinute = GeoUtil.getMinutes( currentLocation.distanceTo(stationLocation));
 
+                            String uriStation = dataObject.getString("owl:sameAs");
                             Map<String, String> querysAcquireStation = new HashMap<String, String>();
                             querysAcquireStation.put("odpt:station", uriStation);
-                            (new OdptUtil()).acquireStationTimetable(context, querysAcquireStation);
+                            (new OdptUtil()).acquireStationTimetable(context, querysAcquireStation, marginMinute);
                         }
                     } catch (JSONException e) {
                     }
@@ -230,7 +249,7 @@ public class OdptUtil {
         }
     }
 
-    private TreeMap<Integer, String> stationTimetableObjectArrayToTreeMap(final Context context, JSONArray stationTimetableObjectArray) {
+    private TreeMap<Integer, String> stationTimetableObjectArrayToTreeMap(final Context context, JSONArray stationTimetableObjectArray, int marginMinute) {
         TreeMap<Integer, String> table = new TreeMap<>();
         for (int j = 0; j < stationTimetableObjectArray.length(); j++) {
             try {
@@ -269,7 +288,7 @@ public class OdptUtil {
 
                 // 24時以降対策
                 int time28 = ((Integer.parseInt(departureTime.substring(0, 2)) < startHourOfDay) ? 2400 : 0) + Integer.parseInt(departureTime.replace(":", ""));
-                int timeT0day = (((getT0day().get(Calendar.HOUR_OF_DAY) < startHourOfDay) ? 2400 : 0) + getT0day().get(Calendar.HOUR_OF_DAY)) * 100 + getT0day().get(Calendar.MINUTE);
+                int timeT0day = (((getT0day(marginMinute).get(Calendar.HOUR_OF_DAY) < startHourOfDay) ? 2400 : 0) + getT0day(marginMinute).get(Calendar.HOUR_OF_DAY)) * 100 + getT0day(marginMinute).get(Calendar.MINUTE);
 
                 // 現在時刻よりも後のものだけ格納
                 if (time28 > timeT0day) {
@@ -282,7 +301,7 @@ public class OdptUtil {
         return table;
     }
 
-    public void acquireStationTimetable(final Context context, Map<String, String> querys) {
+    public void acquireStationTimetable(final Context context, Map<String, String> querys, final int marginMinute) {
         String endPoint = "odpt:StationTimetable";
 
         try {
@@ -307,7 +326,7 @@ public class OdptUtil {
 
                             StringBuilder sb = new StringBuilder();
 
-                            Date dateAdd = getT0day().getTime();
+                            // Date dateAdd = getT0day(marginMinute).getTime();
                             final SimpleDateFormat df = new SimpleDateFormat("HH:mm");
 
                             try {
@@ -359,7 +378,7 @@ public class OdptUtil {
                                     // String stationTimetableObject_ = dataObject.getString("odpt:stationTimetableObject");
                                     JSONArray stationTimetableObjectArray = dataObject.getJSONArray("odpt:stationTimetableObject");
 
-                                    TreeMap<Integer, String> table = stationTimetableObjectArrayToTreeMap(context, stationTimetableObjectArray);
+                                    TreeMap<Integer, String> table = stationTimetableObjectArrayToTreeMap(context, stationTimetableObjectArray, marginMinute);
 
                                     int j = 0;
                                     for (Map.Entry<Integer, String> e : table.entrySet()) {

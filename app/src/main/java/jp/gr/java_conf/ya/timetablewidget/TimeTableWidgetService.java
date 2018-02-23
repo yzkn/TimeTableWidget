@@ -41,7 +41,7 @@ public class TimeTableWidgetService extends Service {
     private static final SimpleDateFormat sdFormatLoad = new SimpleDateFormat("yyyy-MM-dd");
     private static final String URL_HOLIDAYS = "http://www8.cao.go.jp/chosei/shukujitsu/syukujitsu_kyujitsu.csv";
     private Boolean requestingLocationUpdates;
-    private SharedPreferences pref_app;
+    private static SharedPreferences pref_app;
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
@@ -109,7 +109,7 @@ public class TimeTableWidgetService extends Service {
         return START_STICKY;
     }
 
-    private String getPref(String key) {
+    private String loadPref(String key) {
         if (pref_app == null)
             pref_app = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -122,7 +122,7 @@ public class TimeTableWidgetService extends Service {
         return value;
     }
 
-    private void setPref(String key, String value) {
+    private void savePref(String key, String value) {
         if (pref_app == null)
             pref_app = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -149,23 +149,16 @@ public class TimeTableWidgetService extends Service {
         Location location=new Location("");
         location.setLatitude(35.658);
         location.setLongitude(139.745);
-        // float distance = crntLocation.distanceTo(newLocation);
         String lat = Double.toString(location.getLatitude());
         String lon = Double.toString(location.getLongitude());
+        OdptUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LAT, lat);
+        OdptUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LON, lon);
 
         Map<String, String> queryAcquirePlaces = new HashMap<String, String>();
         queryAcquirePlaces.put("x", lon);
         queryAcquirePlaces.put("y", lat);
         queryAcquirePlaces.put("method", "getStations");
         (new HeartRailsUtil()).acquirePlaces(getApplicationContext(), queryAcquirePlaces);
-
-        // ここから確認済
-        /*
-        Map<String, String> querysAcquireStation = new HashMap<String, String>();
-        querysAcquireStation.put("odpt:calendar", checkIfTodayIsHoliday()); // odpt.Calendar:Holiday
-        querysAcquireStation.put("odpt:station", "odpt.Station:TokyoMetro.Chiyoda.Otemachi");
-        (new OdptUtil()).acquireStationTimetable(getApplicationContext(), querysAcquireStation);
-        */
 
         /*
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -175,7 +168,6 @@ public class TimeTableWidgetService extends Service {
         buildLocationSettingsRequest();
         startLocationUpdates();
         */
-        // ここまで確認済
     }
 
     @Override
@@ -204,26 +196,27 @@ public class TimeTableWidgetService extends Service {
                 super.onLocationResult(locationResult);
 
                 Location location = locationResult.getLastLocation();
-                // location.getLatitude() location.getLongitude() location.getAccuracy()
-                // location.getAltitude() location.getSpeed() location.getBearing()
                 Log.v("TTWS", "location getLatitude: " + location.getLatitude());
                 Log.v("TTWS", "location getLongitude: " + location.getLongitude());
 
-                // Temp
-                /*
                 String lat = Double.toString(location.getLatitude());
                 String lon = Double.toString(location.getLongitude());
+                OdptUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LAT, lat);
+                OdptUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LON, lon);
 
+                // Temp
+                Map<String, String> queryAcquirePlaces = new HashMap<String, String>();
+                queryAcquirePlaces.put("x", lon);
+                queryAcquirePlaces.put("y", lat);
+                queryAcquirePlaces.put("method", "getStations");
+                (new HeartRailsUtil()).acquirePlaces(getApplicationContext(), queryAcquirePlaces);
+                /*
                 Map<String, String> queryAcquirePlaces = new HashMap<String, String>();
                 queryAcquirePlaces.put("rdf:type", "odpt:Station");
                 queryAcquirePlaces.put("lon", lon);
                 queryAcquirePlaces.put("lat", lat);
                 queryAcquirePlaces.put("radius", "1000");
                 (new OdptUtil()).acquirePlaces(queryAcquirePlaces);
-
-                Map<String, String> querysAcquireStation = new HashMap<String, String>();
-                querysAcquireStation.put("owl:sameAs", "odpt.Station:TokyoMetro.Chiyoda.Otemachi");
-                (new OdptUtil()).acquireStationTimetable(querysAcquireStation);
                 */
             }
         };
@@ -273,10 +266,10 @@ public class TimeTableWidgetService extends Service {
     }
 
     public String checkIfTodayIsHoliday() {
-        String checkedDay = getPref(PREF_TODAY);
+        String checkedDay = loadPref(PREF_TODAY);
         String now = getDateString(new Date());
         if (checkedDay.equals(now)) {
-            return getPref(PREF_TODAY_IS_HOLIDAY);
+            return loadPref(PREF_TODAY_IS_HOLIDAY);
         } else {
             new Thread(new Runnable() {
                 @Override
@@ -308,8 +301,8 @@ public class TimeTableWidgetService extends Service {
                     boolean isHoliday = parseCsv(t0day, result[0]);
                     Log.v("TTW", "checkIfTodayIsHoliday:" + Boolean.toString(isHoliday));
 
-                    setPref(PREF_TODAY, getDateString(t0day));
-                    setPref(PREF_TODAY_IS_HOLIDAY, (isHoliday?"odpt.Calendar:Holiday":"odpt.Calendar:Weekday"));
+                    savePref(PREF_TODAY, getDateString(t0day));
+                    savePref(PREF_TODAY_IS_HOLIDAY, (isHoliday?"odpt.Calendar:Holiday":"odpt.Calendar:Weekday"));
                 }
             });
             aAsyncDlTask.execute(url);
