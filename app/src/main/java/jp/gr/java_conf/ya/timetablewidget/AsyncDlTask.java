@@ -56,7 +56,7 @@ public final class AsyncDlTask extends AsyncTask<URL, Integer, String[]> {
 
     public static String downloadText(final URL url, final String charsetName) {
         try {
-            Log.v("TTW", url.toString());
+            // Log.v("TTW", url.toString());
 
             final HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
             httpURLConnection.setConnectTimeout(30000);

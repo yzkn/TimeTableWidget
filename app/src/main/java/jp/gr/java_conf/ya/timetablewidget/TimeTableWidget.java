@@ -19,7 +19,7 @@ public class TimeTableWidget extends AppWidgetProvider {
 
     static void updateAppWidget(Context context, String message) {
         //if(context!=null) {
-        Log.v("TTW", "updateAppWidget: " + message);
+        // Log.v("TTW", "updateAppWidget: " + message);
         ComponentName thisWidget = new ComponentName(context, TimeTableWidget.class);
         int[] appWidgetIds = AppWidgetManager.getInstance(context).getAppWidgetIds(thisWidget);
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
@@ -51,7 +51,7 @@ public class TimeTableWidget extends AppWidgetProvider {
     @Override
     public void onDeleted(Context context, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds)
-            TimeTableWidgetConfigureActivity.deleteTitlePref(context, appWidgetId);
+            PrefUtil.deleteTitlePref(context, appWidgetId);
     }
 
     @Override

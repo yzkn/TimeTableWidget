@@ -18,8 +18,6 @@ import android.widget.EditText;
  * The configuration screen for the {@link TimeTableWidget TimeTableWidget} AppWidget.
  */
 public class TimeTableWidgetConfigureActivity extends Activity {
-    private static final String PREFS_NAME = "jp.gr.java_conf.ya.timetablewidget.TimeTableWidget";
-    private static final String PREF_PREFIX_KEY = "appwidget_";
     private final int REQUEST_PERMISSION = 1;
     int mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID;
     EditText mAppWidgetText;
@@ -28,7 +26,7 @@ public class TimeTableWidgetConfigureActivity extends Activity {
             final Context context = TimeTableWidgetConfigureActivity.this;
 
             String widgetText = mAppWidgetText.getText().toString();
-            saveTitlePref(context, mAppWidgetId, widgetText);
+            PrefUtil.saveTitlePref(context, mAppWidgetId, widgetText);
 
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
             TimeTableWidget.updateAppWidget(context, appWidgetManager, mAppWidgetId, "");
@@ -42,31 +40,6 @@ public class TimeTableWidgetConfigureActivity extends Activity {
 
     public TimeTableWidgetConfigureActivity() {
         super();
-    }
-
-    // TODO
-    static void saveTitlePref(Context context, int appWidgetId, String text) {
-        SharedPreferences.Editor prefs = context.getSharedPreferences(PREFS_NAME, 0).edit();
-        prefs.putString(PREF_PREFIX_KEY + appWidgetId, text);
-        prefs.apply();
-    }
-
-    // TODO
-    static String loadTitlePref(Context context, int appWidgetId) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, 0);
-        String titleValue = prefs.getString(PREF_PREFIX_KEY + appWidgetId, null);
-        if (titleValue != null) {
-            return titleValue;
-        } else {
-            return context.getString(R.string.appwidget_text);
-        }
-    }
-
-    // TODO
-    static void deleteTitlePref(Context context, int appWidgetId) {
-        SharedPreferences.Editor prefs = context.getSharedPreferences(PREFS_NAME, 0).edit();
-        prefs.remove(PREF_PREFIX_KEY + appWidgetId);
-        prefs.apply();
     }
 
     @Override
@@ -91,15 +64,10 @@ public class TimeTableWidgetConfigureActivity extends Activity {
             return;
         }
 
-        mAppWidgetText.setText(loadTitlePref(TimeTableWidgetConfigureActivity.this, mAppWidgetId));
+        mAppWidgetText.setText(PrefUtil.loadTitlePref(TimeTableWidgetConfigureActivity.this, mAppWidgetId));
 
         if (Build.VERSION.SDK_INT >= 23)
             checkPermission();
-    }
-
-    public void checkPermission() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,}, REQUEST_PERMISSION);
     }
 
     @Override
@@ -111,6 +79,11 @@ public class TimeTableWidgetConfigureActivity extends Activity {
         if (requestCode == REQUEST_PERMISSION)
             if (grantResults[0] != PackageManager.PERMISSION_GRANTED)
                 finish();
+    }
+
+    public void checkPermission() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,}, REQUEST_PERMISSION);
     }
 }
 

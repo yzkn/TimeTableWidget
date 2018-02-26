@@ -36,12 +36,9 @@ import java.util.Map;
 import static jp.gr.java_conf.ya.timetablewidget.OdptUtil.getDateString;
 
 public class TimeTableWidgetService extends Service {
-    private static final String PREF_TODAY = "PREF_TODAY";
-    private static final String PREF_TODAY_IS_HOLIDAY = "PREF_TODAY_IS_HOLIDAY";
     private static final SimpleDateFormat sdFormatLoad = new SimpleDateFormat("yyyy-MM-dd");
     private static final String URL_HOLIDAYS = "http://www8.cao.go.jp/chosei/shukujitsu/syukujitsu_kyujitsu.csv";
     private Boolean requestingLocationUpdates;
-    private static SharedPreferences pref_app;
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private LocationRequest locationRequest;
@@ -49,6 +46,149 @@ public class TimeTableWidgetService extends Service {
     private SettingsClient settingsClient;
 
     public TimeTableWidgetService() {
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.v("TTWS", "onDestroy()");
+
+        try {
+            stopLocationUpdates();
+        } catch (Exception e) {
+        }
+
+        super.onDestroy();
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public void onStart(Intent intent, int startId) {
+        Log.v("TTWS", "onStart()");
+        super.onStart(intent, startId);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.v("TTWS", "onStartCommand()");
+        super.onStartCommand(intent, flags, startId);
+
+        startForeground(startId, new Notification());
+
+        init(intent);
+
+        return START_STICKY;
+    }
+
+    private void buildLocationSettingsRequest() {
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+
+        builder.addLocationRequest(locationRequest);
+        locationSettingsRequest = builder.build();
+    }
+
+    private void createLocationCallback() {
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+
+                Location location = locationResult.getLastLocation();
+                Log.v("TTWS", "location getLatitude: " + location.getLatitude());
+                Log.v("TTWS", "location getLongitude: " + location.getLongitude());
+
+                String lat = Double.toString(location.getLatitude());
+                String lon = Double.toString(location.getLongitude());
+                PrefUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LAT, lat);
+                PrefUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LON, lon);
+
+                // Temp
+                Map<String, String> queryAcquirePlaces = new HashMap<String, String>();
+                queryAcquirePlaces.put("x", lon);
+                queryAcquirePlaces.put("y", lat);
+                queryAcquirePlaces.put("method", "getStations");
+                (new HeartRailsUtil()).acquirePlaces(getApplicationContext(), queryAcquirePlaces);
+                /*
+                Map<String, String> queryAcquirePlaces = new HashMap<String, String>();
+                queryAcquirePlaces.put("rdf:type", "odpt:Station");
+                queryAcquirePlaces.put("lon", lon);
+                queryAcquirePlaces.put("lat", lat);
+                queryAcquirePlaces.put("radius", "1000");
+                (new OdptUtil()).acquirePlaces(queryAcquirePlaces);
+                */
+            }
+        };
+    }
+
+    private void createLocationRequest() {
+        locationRequest = new LocationRequest();
+        locationRequest.setFastestInterval(30 * 1000);
+        locationRequest.setInterval(60 * 1000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+//        LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+//        PRIORITY_LOW_POWER
+//        PRIORITY_NO_POWER
+    }
+
+    private void startLocationUpdates() {
+        try {
+            settingsClient.checkLocationSettings(locationSettingsRequest);
+            fusedLocationClient.requestLocationUpdates(
+                    locationRequest, locationCallback, Looper.myLooper());
+            requestingLocationUpdates = true;
+        } catch (SecurityException e) {
+        }
+    }
+
+    private void stopLocationUpdates() {
+        if (!requestingLocationUpdates)
+            return;
+
+        try {
+            fusedLocationClient.removeLocationUpdates(locationCallback);
+            requestingLocationUpdates = false;
+        } catch (Exception e) {
+        }
+    }
+
+    private void init(Intent intent) {
+        int appWidgetId = -1;
+        try {
+            appWidgetId = intent.getExtras().getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
+        } catch (Exception e) {
+        }
+        // Log.v("TTW", "appWidgetId:" + appWidgetId);
+
+        // 休日判定
+        setHoliday(getApplicationContext());
+
+        // Temp
+        Location location=new Location("");
+        location.setLatitude(35.658);
+        location.setLongitude(139.745);
+        String lat = Double.toString(location.getLatitude());
+        String lon = Double.toString(location.getLongitude());
+        PrefUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LAT, lat);
+        PrefUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LON, lon);
+
+        Map<String, String> queryAcquirePlaces = new HashMap<String, String>();
+        queryAcquirePlaces.put("x", lon);
+        queryAcquirePlaces.put("y", lat);
+        queryAcquirePlaces.put("method", "getStations");
+        (new HeartRailsUtil()).acquirePlaces(getApplicationContext(), queryAcquirePlaces);
+
+        /*
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        settingsClient = LocationServices.getSettingsClient(this);
+        createLocationCallback();
+        createLocationRequest();
+        buildLocationSettingsRequest();
+        startLocationUpdates();
+        */
     }
 
     private static boolean parseCsv(final Date t0day, final String csvString) {
@@ -97,192 +237,7 @@ public class TimeTableWidgetService extends Service {
         return result;
     }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.v("TTWS", "onStartCommand()");
-        super.onStartCommand(intent, flags, startId);
-
-        startForeground(startId, new Notification());
-
-        init(intent);
-
-        return START_STICKY;
-    }
-
-    private String loadPref(String key) {
-        if (pref_app == null)
-            pref_app = PreferenceManager.getDefaultSharedPreferences(this);
-
-        String value;
-        try {
-            value = pref_app.getString(key, "");
-        } catch (Exception e) {
-            value = "";
-        }
-        return value;
-    }
-
-    private void savePref(String key, String value) {
-        if (pref_app == null)
-            pref_app = PreferenceManager.getDefaultSharedPreferences(this);
-
-        try {
-            SharedPreferences.Editor editor = pref_app.edit();
-            editor.putString(key, value);
-            editor.apply();
-        } catch (Exception e) {
-        }
-    }
-
-    private void init(Intent intent) {
-        int appWidgetId = -1;
-        try {
-            appWidgetId = intent.getExtras().getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
-        } catch (Exception e) {
-        }
-        Log.v("TTW", "appWidgetId:" + appWidgetId);
-
-        // 休日判定
-        setHoliday();
-
-        // Temp
-        Location location=new Location("");
-        location.setLatitude(35.658);
-        location.setLongitude(139.745);
-        String lat = Double.toString(location.getLatitude());
-        String lon = Double.toString(location.getLongitude());
-        OdptUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LAT, lat);
-        OdptUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LON, lon);
-
-        Map<String, String> queryAcquirePlaces = new HashMap<String, String>();
-        queryAcquirePlaces.put("x", lon);
-        queryAcquirePlaces.put("y", lat);
-        queryAcquirePlaces.put("method", "getStations");
-        (new HeartRailsUtil()).acquirePlaces(getApplicationContext(), queryAcquirePlaces);
-
-        /*
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        settingsClient = LocationServices.getSettingsClient(this);
-        createLocationCallback();
-        createLocationRequest();
-        buildLocationSettingsRequest();
-        startLocationUpdates();
-        */
-    }
-
-    @Override
-    public void onDestroy() {
-        Log.v("TTWS", "onDestroy()");
-
-        try {
-            stopLocationUpdates();
-        } catch (Exception e) {
-        }
-
-        super.onDestroy();
-    }
-
-    @SuppressWarnings("deprecation")
-    @Override
-    public void onStart(Intent intent, int startId) {
-        Log.v("TTWS", "onStart()");
-        super.onStart(intent, startId);
-    }
-
-    private void createLocationCallback() {
-        locationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                super.onLocationResult(locationResult);
-
-                Location location = locationResult.getLastLocation();
-                Log.v("TTWS", "location getLatitude: " + location.getLatitude());
-                Log.v("TTWS", "location getLongitude: " + location.getLongitude());
-
-                String lat = Double.toString(location.getLatitude());
-                String lon = Double.toString(location.getLongitude());
-                OdptUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LAT, lat);
-                OdptUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LON, lon);
-
-                // Temp
-                Map<String, String> queryAcquirePlaces = new HashMap<String, String>();
-                queryAcquirePlaces.put("x", lon);
-                queryAcquirePlaces.put("y", lat);
-                queryAcquirePlaces.put("method", "getStations");
-                (new HeartRailsUtil()).acquirePlaces(getApplicationContext(), queryAcquirePlaces);
-                /*
-                Map<String, String> queryAcquirePlaces = new HashMap<String, String>();
-                queryAcquirePlaces.put("rdf:type", "odpt:Station");
-                queryAcquirePlaces.put("lon", lon);
-                queryAcquirePlaces.put("lat", lat);
-                queryAcquirePlaces.put("radius", "1000");
-                (new OdptUtil()).acquirePlaces(queryAcquirePlaces);
-                */
-            }
-        };
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    private void createLocationRequest() {
-        locationRequest = new LocationRequest();
-        locationRequest.setFastestInterval(30 * 1000);
-        locationRequest.setInterval(60 * 1000);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-//        LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
-//        PRIORITY_LOW_POWER
-//        PRIORITY_NO_POWER
-    }
-
-    private void buildLocationSettingsRequest() {
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-
-        builder.addLocationRequest(locationRequest);
-        locationSettingsRequest = builder.build();
-    }
-
-    private void startLocationUpdates() {
-        try {
-            settingsClient.checkLocationSettings(locationSettingsRequest);
-            fusedLocationClient.requestLocationUpdates(
-                    locationRequest, locationCallback, Looper.myLooper());
-            requestingLocationUpdates = true;
-        } catch (SecurityException e) {
-        }
-    }
-
-    private void stopLocationUpdates() {
-        if (!requestingLocationUpdates)
-            return;
-
-        try {
-            fusedLocationClient.removeLocationUpdates(locationCallback);
-            requestingLocationUpdates = false;
-        } catch (Exception e) {
-        }
-    }
-
-    public String checkIfTodayIsHoliday() {
-        String checkedDay = loadPref(PREF_TODAY);
-        String now = getDateString(new Date());
-        if (checkedDay.equals(now)) {
-            return loadPref(PREF_TODAY_IS_HOLIDAY);
-        } else {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    setHoliday();
-                }
-            }).start();
-            return "";
-        }
-
-    }
-
-    public void setHoliday() {
+    public static void setHoliday(final Context context) {
         try {
             final URL url = new URL(URL_HOLIDAYS);
             AsyncDlTask aAsyncDlTask = new AsyncDlTask(new AsyncDlTask.AsyncCallback() {
@@ -299,10 +254,10 @@ public class TimeTableWidgetService extends Service {
                 public void onPostExecute(String[] result) {
                     Date t0day = OdptUtil.getT0day().getTime();
                     boolean isHoliday = parseCsv(t0day, result[0]);
-                    Log.v("TTW", "checkIfTodayIsHoliday:" + Boolean.toString(isHoliday));
+                    // Log.v("TTW", "checkIfTodayIsHoliday:" + Boolean.toString(isHoliday));
 
-                    savePref(PREF_TODAY, getDateString(t0day));
-                    savePref(PREF_TODAY_IS_HOLIDAY, (isHoliday?"odpt.Calendar:Holiday":"odpt.Calendar:Weekday"));
+                    PrefUtil.savePref(context, PrefUtil.PREF_TODAY, getDateString(t0day));
+                    PrefUtil.savePref(context, PrefUtil.PREF_TODAY_IS_HOLIDAY, (isHoliday?"odpt.Calendar:Holiday":"odpt.Calendar:Weekday"));
                 }
             });
             aAsyncDlTask.execute(url);

@@ -32,18 +32,30 @@ public class HeartRailsUtil {
                 }
 
                 public void onPostExecute(String[] result) {
-                    Log.v("TTW", result[0]);
+                    // Log.v("TTW", result[0]);
 
                     try {
                         JSONObject json = new JSONObject(result[0]);
                         JSONArray dataArray = json.getJSONObject("response").getJSONArray("station");
 
+                        Integer min = Integer.MAX_VALUE;
+                        String uriStation ="";
                         for (int i = 0; i < dataArray.length(); i++) {
                             JSONObject dataObject = dataArray.getJSONObject(i);
-                            String uriStation = dataObject.getString("name");
                             String uriDistance = dataObject.getString("distance");
+                            try{
+                                int d = Integer.parseInt(uriDistance.replace("m",""));
+                                if(d<min) {
+                                    min = d;
+                                    uriStation = dataObject.getString("name");
+                                }
+                            }catch(NumberFormatException e){
+                            }
+                        }
+                        if(!uriStation.equals("")) {
                             Map<String, String> querysAcquireStation = new HashMap<String, String>();
                             querysAcquireStation.put("dc:title", uriStation);
+                            // Log.v("TTW", "HRU uriStation: " + uriStation + " : " + min +"m");
                             (new OdptUtil()).acquireStation(context, querysAcquireStation);
                         }
                     } catch (JSONException e) {
