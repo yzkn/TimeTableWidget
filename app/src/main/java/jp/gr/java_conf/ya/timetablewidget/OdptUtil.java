@@ -72,142 +72,181 @@ public class OdptUtil {
                 return "ゆりかもめ";
             else
                 return "";
-        } else if (key.startsWith("odpt.RailDirection:Inbound")) {
+        } else if (key.equals("odpt.RailDirection:Inbound")) {
             return "上り";
-        } else if (key.startsWith("odpt.RailDirection:Outbound")) {
+        } else if (key.equals("odpt.RailDirection:Outbound")) {
             return "下り";
-        } else if (key.startsWith("odpt.RailDirection:InnerLoop")) {
+        } else if (key.equals("odpt.RailDirection:InnerLoop")) {
             return "内回り";
-        } else if (key.startsWith("odpt.RailDirection:OuterLoop")) {
+        } else if (key.equals("odpt.RailDirection:OuterLoop")) {
             return "外回り";
-        } else if (key.startsWith("odpt.TrainType:")) {
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.Asakusa")) {
+            return "浅草方面";
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.Shibuya")) {
+            return "渋谷方面";
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.Honancho")) {
+            return "方南町方面";
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.Ikebukuro")) {
+            return "池袋方面";
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.Ogikubo")) {
+            return "荻窪方面";
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.NakaMeguro")) {
+            return "中目黒方面";
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.KitaSenju")) {
+            return "北千住方面";
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.Nakano")) {
+            return "中野方面";
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.NishiFunabashi")) {
+            return "西船橋方面";
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.Ayase")) {
+            return "綾瀬方面";
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.YoyogiUehara")) {
+            return "代々木上原方面";
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.ShinKiba")) {
+            return "新木場方面";
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.Wakoshi")) {
+            return "和光市方面";
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.Oshiage")) {
+            return "押上方面";
+            // } else if (key.equals("odpt.RailDirection:TokyoMetro.Shibuya")) {
+            // return "渋谷方面";
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.AkabaneIwabuchi")) {
+            return "赤羽岩淵方面";
+        } else if (key.equals("odpt.RailDirection:TokyoMetro.Meguro")) {
+            return "目黒方面";
+            // } else if (key.equals("odpt.RailDirection:TokyoMetro.Shibuya")) {
+            // return "渋谷方面";
+            // } else if (key.equals("odpt.RailDirection:TokyoMetro.Wakoshi")) {
+            // return "和光市方面";
+
+        } else if (key.equals("odpt.TrainType:")) {
 
             //
 
-            if (key.startsWith("odpt.TrainType:JR-East.Local"))
+            if (key.equals("odpt.TrainType:JR-East.Local"))
                 return "普通";
-            else if (key.startsWith("odpt.TrainType:JR-East.Rapid"))
+            else if (key.equals("odpt.TrainType:JR-East.Rapid"))
                 return "快速";
 
             //
 
-            if (key.startsWith("odpt.TrainType:Keikyu.AccessLimitedExpress"))
+            if (key.equals("odpt.TrainType:Keikyu.AccessLimitedExpress"))
                 return "アクセス特急";
-            else if (key.startsWith("odpt.TrainType:Keikyu.AirportExpress"))
+            else if (key.equals("odpt.TrainType:Keikyu.AirportExpress"))
                 return "エアポート急行";
-            else if (key.startsWith("odpt.TrainType:Keikyu.AirportRapidLimitedExpress"))
+            else if (key.equals("odpt.TrainType:Keikyu.AirportRapidLimitedExpress"))
                 return "エアポート快特";
-            else if (key.startsWith("odpt.TrainType:Keikyu.CommuterLimitedExpress"))
+            else if (key.equals("odpt.TrainType:Keikyu.CommuterLimitedExpress"))
                 return "通勤特急";
-            else if (key.startsWith("odpt.TrainType:Keikyu.LimitedExpress"))
+            else if (key.equals("odpt.TrainType:Keikyu.LimitedExpress"))
                 return "特急";
-            else if (key.startsWith("odpt.TrainType:Keikyu.Local"))
+            else if (key.equals("odpt.TrainType:Keikyu.Local"))
                 return "普通";
-            else if (key.startsWith("odpt.TrainType:Keikyu.MorningWing"))
+            else if (key.equals("odpt.TrainType:Keikyu.MorningWing"))
                 return "モーニング・ウィング号";
-            else if (key.startsWith("odpt.TrainType:Keikyu.Rapid"))
+            else if (key.equals("odpt.TrainType:Keikyu.Rapid"))
                 return "快速";
-            else if (key.startsWith("odpt.TrainType:Keikyu.RapidLimitedExpress"))
+            else if (key.equals("odpt.TrainType:Keikyu.RapidLimitedExpress"))
                 return "快特";
-            else if (key.startsWith("odpt.TrainType:Keikyu.Wing"))
+            else if (key.equals("odpt.TrainType:Keikyu.Wing"))
                 return "京急ウィング号";
 
-            //
+                //
 
-            else if (key.startsWith("odpt.TrainType:Keio.Express"))
+            else if (key.equals("odpt.TrainType:Keio.Express"))
                 return "急行";
-            else if (key.startsWith("odpt.TrainType:Keio.LimitedExpress"))
+            else if (key.equals("odpt.TrainType:Keio.LimitedExpress"))
                 return "特急";
-            else if (key.startsWith("odpt.TrainType:Keio.Local"))
+            else if (key.equals("odpt.TrainType:Keio.Local"))
                 return "各駅停車";
-            else if (key.startsWith("odpt.TrainType:Keio.Rapid"))
+            else if (key.equals("odpt.TrainType:Keio.Rapid"))
                 return "快速";
-            else if (key.startsWith("odpt.TrainType:Keio.SemiExpress"))
+            else if (key.equals("odpt.TrainType:Keio.SemiExpress"))
                 return "区間急行";
-            else if (key.startsWith("odpt.TrainType:Keio.SemiLimitedExpress"))
+            else if (key.equals("odpt.TrainType:Keio.SemiLimitedExpress"))
                 return "準特急";
 
             //
 
-            if (key.startsWith("odpt.TrainType:Odakyu.Local"))
+            if (key.equals("odpt.TrainType:Odakyu.Local"))
                 return "普通";
 
             //
 
-            if (key.startsWith("odpt.TrainType:Seibu.Local"))
+            if (key.equals("odpt.TrainType:Seibu.Local"))
                 return "普通";
 
             //
 
-            if (key.startsWith("odpt.TrainType:TWR.Local"))
+            if (key.equals("odpt.TrainType:TWR.Local"))
                 return "普通";
 
             //
 
-            if (key.startsWith("odpt.TrainType:Tobu.Express"))
+            if (key.equals("odpt.TrainType:Tobu.Express"))
                 return "急行";
-            else if (key.startsWith("odpt.TrainType:Tobu.F-Liner"))
+            else if (key.equals("odpt.TrainType:Tobu.F-Liner"))
                 return "Fライナー";
-            else if (key.startsWith("odpt.TrainType:Tobu.Local"))
+            else if (key.equals("odpt.TrainType:Tobu.Local"))
                 return "普通";
-            else if (key.startsWith("odpt.TrainType:Tobu.Rapid"))
+            else if (key.equals("odpt.TrainType:Tobu.Rapid"))
                 return "快速";
-            else if (key.startsWith("odpt.TrainType:Tobu.RapidExpress"))
+            else if (key.equals("odpt.TrainType:Tobu.RapidExpress"))
                 return "快速急行";
-            else if (key.startsWith("odpt.TrainType:Tobu.SemiExpress"))
+            else if (key.equals("odpt.TrainType:Tobu.SemiExpress"))
                 return "準急";
-            else if (key.startsWith("odpt.TrainType:Tobu.TJ-Liner"))
+            else if (key.equals("odpt.TrainType:Tobu.TJ-Liner"))
                 return "TJライナー";
 
             //
 
-            if (key.startsWith("odpt.TrainType:Toei.AccessLimitedExpress"))
+            if (key.equals("odpt.TrainType:Toei.AccessLimitedExpress"))
                 return "アクセス特急";
-            else if (key.startsWith("odpt.TrainType:Toei.AirportRapidLimitedExpress"))
+            else if (key.equals("odpt.TrainType:Toei.AirportRapidLimitedExpress"))
                 return "エアポート快特";
-            else if (key.startsWith("odpt.TrainType:Toei.CommuterLimitedExpress"))
+            else if (key.equals("odpt.TrainType:Toei.CommuterLimitedExpress"))
                 return "通勤特急";
-            else if (key.startsWith("odpt.TrainType:Toei.Express"))
+            else if (key.equals("odpt.TrainType:Toei.Express"))
                 return "急行";
-            else if (key.startsWith("odpt.TrainType:Toei.LimitedExpress"))
+            else if (key.equals("odpt.TrainType:Toei.LimitedExpress"))
                 return "特急";
-            else if (key.startsWith("odpt.TrainType:Toei.Local"))
+            else if (key.equals("odpt.TrainType:Toei.Local"))
                 return "各駅停車";
-            else if (key.startsWith("odpt.TrainType:Toei.Rapid"))
+            else if (key.equals("odpt.TrainType:Toei.Rapid"))
                 return "快速";
-            else if (key.startsWith("odpt.TrainType:Toei.RapidLimitedExpress"))
+            else if (key.equals("odpt.TrainType:Toei.RapidLimitedExpress"))
                 return "快特";
 
 
             //
 
-            if (key.startsWith("odpt.TrainType:TokyoMetro.CommuterExpress"))
+            if (key.equals("odpt.TrainType:TokyoMetro.CommuterExpress"))
                 return "通勤急行";
-            else if (key.startsWith("odpt.TrainType:TokyoMetro.Express"))
+            else if (key.equals("odpt.TrainType:TokyoMetro.Express"))
                 return "急行";
-            else if (key.startsWith("odpt.TrainType:TokyoMetro.F-Liner"))
+            else if (key.equals("odpt.TrainType:TokyoMetro.F-Liner"))
                 return "Fライナー";
-            else if (key.startsWith("odpt.TrainType:TokyoMetro.LimitedExpress"))
+            else if (key.equals("odpt.TrainType:TokyoMetro.LimitedExpress"))
                 return "特急ロマンスカー";
-            else if (key.startsWith("odpt.TrainType:TokyoMetro.Local"))
+            else if (key.equals("odpt.TrainType:TokyoMetro.Local"))
                 return "各駅停車";
-            else if (key.startsWith("odpt.TrainType:TokyoMetro.Rapid"))
+            else if (key.equals("odpt.TrainType:TokyoMetro.Rapid"))
                 return "快速";
-            else if (key.startsWith("odpt.TrainType:TokyoMetro.S-TRAIN"))
+            else if (key.equals("odpt.TrainType:TokyoMetro.S-TRAIN"))
                 return "S-TRAIN";
-            else if (key.startsWith("odpt.TrainType:TokyoMetro.SemiExpress"))
+            else if (key.equals("odpt.TrainType:TokyoMetro.SemiExpress"))
                 return "準急";
-            else if (key.startsWith("odpt.TrainType:TokyoMetro.TamaExpress"))
+            else if (key.equals("odpt.TrainType:TokyoMetro.TamaExpress"))
                 return "多摩急行";
 
-            //
+                //
 
-            else if (key.startsWith("odpt.TrainType:Tokyu.Local"))
+            else if (key.equals("odpt.TrainType:Tokyu.Local"))
                 return "各駅停車";
 
-            //
+                //
 
-            else if (key.startsWith("odpt.TrainType:Yurikamome.Local"))
+            else if (key.equals("odpt.TrainType:Yurikamome.Local"))
                 return "各駅停車";
 
             //
@@ -233,7 +272,7 @@ public class OdptUtil {
             }
             if (url != null) {
                 String result = AsyncDlTask.downloadText(url, "UTF-8");
-                // Log.v("TTW", "getTitle result:" + result);
+                if (OdptKey.IS_DEBUG) Log.v("TTW", "getTitle result:" + result);
                 JSONObject json = new JSONObject(HEADER + result + FOOTER);
                 JSONObject dataObject = json.getJSONArray("data").getJSONObject(0);
                 title = dataObject.getString("dc:title");
@@ -276,27 +315,28 @@ public class OdptUtil {
                 }
 
                 public void onPostExecute(String[] result) {
-                    // Log.v("TTW", result[0]);
+                    if (OdptKey.IS_DEBUG) Log.v("TTW", result[0]);
 
-                    try {
-                        JSONObject json = new JSONObject(HEADER + result[0] + FOOTER);
-                        JSONArray dataArray = json.getJSONArray("data");
+                    if (!result[0].equals(""))
+                        try {
+                            JSONObject json = new JSONObject(HEADER + result[0] + FOOTER);
+                            JSONArray dataArray = json.getJSONArray("data");
 
-                        for (int i = 0; i < dataArray.length(); i++) {
-                            JSONObject dataObject = dataArray.getJSONObject(i);
-                            // TODO: 現在地と駅との距離も取得
-                            Location currentLocation = GeoUtil.createLocation(PrefUtil.loadOdptPref(context, PREF_CURRENT_LAT), PrefUtil.loadOdptPref(context, PREF_CURRENT_LON));
-                            Location stationLocation = GeoUtil.createLocation(dataObject.getString("lat"), dataObject.getString("lon"));
-                            int marginMinute = GeoUtil.getMinutes(currentLocation.distanceTo(stationLocation));
+                            for (int i = 0; i < dataArray.length(); i++) {
+                                JSONObject dataObject = dataArray.getJSONObject(i);
+                                Location currentLocation = GeoUtil.createLocation(PrefUtil.loadOdptPref(context, PREF_CURRENT_LAT), PrefUtil.loadOdptPref(context, PREF_CURRENT_LON));
+                                Location stationLocation = GeoUtil.createLocation(dataObject.getString("lat"), dataObject.getString("lon"));
+                                int marginMinute = GeoUtil.getMinutes(currentLocation.distanceTo(stationLocation));
 
-                            String uriStation = dataObject.getString("owl:sameAs");
-                            Map<String, String> querysAcquireStation = new HashMap<String, String>();
-                            querysAcquireStation.put("odpt:station", uriStation);
-                            querysAcquireStation.put("odpt:calendar", PrefUtil.checkIfTodayIsHoliday(context));
-                            (new OdptUtil()).acquireStationTimetable(context, querysAcquireStation, marginMinute);
+                                String uriStation = dataObject.getString("owl:sameAs");
+                                Map<String, String> querysAcquireStation = new HashMap<String, String>();
+                                querysAcquireStation.put("odpt:station", uriStation);
+                                querysAcquireStation.put("odpt:calendar", PrefUtil.checkIfTodayIsHoliday(context));
+                                (new OdptUtil()).acquireStationTimetable(context, querysAcquireStation, marginMinute);
+                                break;
+                            }
+                        } catch (JSONException e) {
                         }
-                    } catch (JSONException e) {
-                    }
                 }
             });
             aAsyncDlTask.execute(url);
@@ -306,6 +346,8 @@ public class OdptUtil {
 
     public void acquireStation(final Context context, Map<String, String> querys) {
         String endPoint = "odpt:Station";
+        if (OdptKey.IS_DEBUG)
+            Log.v("TTW", "acquireStation " + buildQueryString(BASE_URI + endPoint, querys));
 
         try {
             final URL url = new URL(buildQueryString(BASE_URI + endPoint, querys));
@@ -320,26 +362,31 @@ public class OdptUtil {
                 }
 
                 public void onPostExecute(String[] result) {
-                    // Log.v("TTW", "acquireStation: " + result[0]);
+                    if (OdptKey.IS_DEBUG) Log.v("TTW", "acquireStation: " + result[0]);
 
-                    try {
-                        JSONObject json = new JSONObject(HEADER + result[0] + FOOTER);
-                        JSONArray dataArray = json.getJSONArray("data");
+                    if (!result[0].equals(""))
+                        try {
+                            JSONObject json = new JSONObject(HEADER + result[0] + FOOTER);
+                            JSONArray dataArray = json.getJSONArray("data");
 
-                        for (int i = 0; i < dataArray.length(); i++) {
-                            JSONObject dataObject = dataArray.getJSONObject(i);
-                            Location currentLocation = GeoUtil.createLocation(PrefUtil.loadOdptPref(context, PREF_CURRENT_LAT), PrefUtil.loadOdptPref(context, PREF_CURRENT_LON));
-                            Location stationLocation = GeoUtil.createLocation(dataObject.getString("geo:lat"), dataObject.getString("geo:long"));
-                            int marginMinute = GeoUtil.getMinutes(currentLocation.distanceTo(stationLocation));
+                            for (int i = 0; i < dataArray.length(); i++) {
+                                JSONObject dataObject = dataArray.getJSONObject(i);
+                                Location currentLocation = GeoUtil.createLocation(PrefUtil.loadOdptPref(context, PREF_CURRENT_LAT), PrefUtil.loadOdptPref(context, PREF_CURRENT_LON));
+                                Location stationLocation = GeoUtil.createLocation(dataObject.getString("geo:lat"), dataObject.getString("geo:long"));
 
-                            String uriStation = dataObject.getString("owl:sameAs");
-                            Map<String, String> querysAcquireStation = new HashMap<String, String>();
-                            querysAcquireStation.put("odpt:station", uriStation);
-                            querysAcquireStation.put("odpt:calendar", PrefUtil.checkIfTodayIsHoliday(context));
-                            (new OdptUtil()).acquireStationTimetable(context, querysAcquireStation, marginMinute);
+                                if (currentLocation != null && stationLocation != null) {
+                                    int marginMinute = GeoUtil.getMinutes(currentLocation.distanceTo(stationLocation));
+
+                                    String uriStation = dataObject.getString("owl:sameAs");
+                                    Map<String, String> querysAcquireStation = new HashMap<String, String>();
+                                    querysAcquireStation.put("odpt:station", uriStation);
+                                    querysAcquireStation.put("odpt:calendar", PrefUtil.checkIfTodayIsHoliday(context));
+                                    (new OdptUtil()).acquireStationTimetable(context, querysAcquireStation, marginMinute);
+                                    break;
+                                }
+                            }
+                        } catch (JSONException e) {
                         }
-                    } catch (JSONException e) {
-                    }
                 }
             });
             aAsyncDlTask.execute(url);
@@ -357,7 +404,7 @@ public class OdptUtil {
                 String destinationStation; // 目的地
                 try {
                     if (stationTimetableObject.has("odpt:destinationStationTitle"))
-                        destinationStation = new String(stationTimetableObject.getString("odpt:destinationStationTitle").getBytes("Shift_JIS"), "UTF-8");
+                        destinationStation = stationTimetableObject.getString("odpt:destinationStationTitle");
                     else
                         destinationStation = getTitle(context, stationTimetableObject.getString("odpt:destinationStation"));
                 } catch (Exception e) {
@@ -374,11 +421,11 @@ public class OdptUtil {
                 String trainType = ""; // 種別
                 try {
                     if (stationTimetableObject.has("odpt:trainName")) {
-                        trainType = new String(stationTimetableObject.getString("odpt:trainName").getBytes("Shift_JIS"), "UTF-8");
-                    }else {
+                        trainType = stationTimetableObject.getString("odpt:trainName");
+                    } else {
                         try {
                             if (stationTimetableObject.has("odpt:trainTypeTitle"))
-                                trainType = new String(stationTimetableObject.getString("odpt:trainTypeTitle").getBytes("Shift_JIS"), "UTF-8");
+                                trainType = stationTimetableObject.getString("odpt:trainTypeTitle");
                             else
                                 trainType = getTitle(context, stationTimetableObject.getString("odpt:trainType"));
                         } catch (Exception e) {
@@ -398,7 +445,8 @@ public class OdptUtil {
                 // 現在時刻よりも後のものだけ格納
                 if (time28 > timeT0day) {
                     table.put(time28, note);
-                    // Log.v("TTW", "28:"+ time28 +" t0day:"+ timeT0day +" "+ departureTime + " " + note);
+                    if (OdptKey.IS_DEBUG)
+                        Log.v("TTW", "28:" + time28 + " t0day:" + timeT0day + " " + departureTime + " " + note);
                 }
             } catch (Exception e) {
             }
@@ -410,6 +458,8 @@ public class OdptUtil {
         String endPoint = "odpt:StationTimetable";
 
         try {
+            if (OdptKey.IS_DEBUG)
+                Log.v("TTW", "acquireStationTimetable: " + buildQueryString(BASE_URI + endPoint, querys));
             final URL url = new URL(buildQueryString(BASE_URI + endPoint,
                     querys));
             AsyncDlTask asyncDlTask = new AsyncDlTask(new AsyncDlTask.AsyncCallback() {
@@ -423,88 +473,94 @@ public class OdptUtil {
                 }
 
                 public void onPostExecute(final String[] result) {
-                    // Log.v("TTW", "acquireStationTimetable: " + result[0]);
+                    if (OdptKey.IS_DEBUG) Log.v("TTW", "acquireStationTimetable: " + result[0]);
 
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
+                    if (!result[0].equals(""))
+                        try {
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
 
-                            StringBuilder sb = new StringBuilder();
+                                    StringBuilder sb = new StringBuilder();
 
-                            // Date dateAdd = getT0day(marginMinute).getTime();
-                            final SimpleDateFormat df = new SimpleDateFormat("HH:mm");
+                                    // Date dateAdd = getT0day(marginMinute).getTime();
+                                    final SimpleDateFormat df = new SimpleDateFormat("HH:mm");
 
-                            try {
-                                Date date0400 = df.parse("04:00");
-
-                                JSONObject json = new JSONObject(HEADER + result[0] + FOOTER);
-                                JSONArray dataArray = json.getJSONArray("data");
-
-                                for (int i = 0; i < dataArray.length(); i++) {
-                                    JSONObject dataObject = dataArray.getJSONObject(i);
-
-
-                                    String railway;
                                     try {
-                                        if (dataObject.has("odpt:railwayTitle"))
-                                            railway = new String(dataObject.getString("odpt:railwayTitle").getBytes("Shift_JIS"), "UTF-8");
-                                        else
-                                            railway = getTitle(context, dataObject.getString("odpt:railway"));
-                                    } catch (Exception e) {
-                                        railway = getTitle(context, dataObject.getString("odpt:railway"));
-                                    }
+                                        Date date0400 = df.parse("04:00");
 
-                                    String station;
-                                    try {
-                                        if (dataObject.has("odpt:stationTitle"))
-                                            station = new String(dataObject.getString("odpt:stationTitle").getBytes("Shift_JIS"), "UTF-8");
-                                        else
-                                            station = getTitle(context, dataObject.getString("odpt:station"));
-                                    } catch (Exception e) {
-                                        station = getTitle(context, dataObject.getString("odpt:station"));
-                                    }
+                                        JSONObject json = new JSONObject(HEADER + result[0] + FOOTER);
+                                        JSONArray dataArray = json.getJSONArray("data");
 
-                                    String calendar = dataObject.getString("odpt:calendar");
-                                    String operator = dataObject.getString("odpt:operator");
+                                        for (int i = 0; i < dataArray.length(); i++) {
+                                            JSONObject dataObject = dataArray.getJSONObject(i);
 
-                                    String railDirection;
-                                    try {
-                                        if (dataObject.has("odpt:railDirectionTitle"))
-                                            railDirection = new String(dataObject.getString("odpt:railDirectionTitle").getBytes("Shift_JIS"), "UTF-8");
-                                        else
-                                            railDirection = getTitle(context, dataObject.getString("odpt:railDirection"));
-                                    } catch (Exception e) {
-                                        railDirection = getTitle(context, dataObject.getString("odpt:railDirection"));
-                                    }
 
-                                    String note = station + (station.endsWith("駅") ? "" : "駅") + " " + //
-                                            railDirection + " " + // + (railDirection.endsWith("駅") ? "" : "駅") + " " + //
-                                            railway + (railway.endsWith("線") ? "" : "線");
-                                    // Log.v("TTW", "note: " + note + " " + railDirection);
+                                            String railway;
+                                            try {
+                                                if (dataObject.has("odpt:railwayTitle"))
+                                                    railway = dataObject.getString("odpt:railwayTitle");
+                                                else
+                                                    railway = getTitle(context, dataObject.getString("odpt:railway"));
+                                            } catch (Exception e) {
+                                                railway = getTitle(context, dataObject.getString("odpt:railway"));
+                                            }
 
-                                    // String stationTimetableObject_ = dataObject.getString("odpt:stationTimetableObject");
-                                    JSONArray stationTimetableObjectArray = dataObject.getJSONArray("odpt:stationTimetableObject");
+                                            String station;
+                                            try {
+                                                if (dataObject.has("odpt:stationTitle"))
+                                                    station = dataObject.getString("odpt:stationTitle");
+                                                else
+                                                    station = getTitle(context, dataObject.getString("odpt:station"));
+                                            } catch (Exception e) {
+                                                station = getTitle(context, dataObject.getString("odpt:station"));
+                                            }
 
-                                    TreeMap<Integer, String> table = stationTimetableObjectArrayToTreeMap(context, stationTimetableObjectArray, marginMinute);
+                                            String calendar = dataObject.getString("odpt:calendar");
+                                            String operator = dataObject.getString("odpt:operator");
 
-                                    int j = 0;
-                                    for (Map.Entry<Integer, String> e : table.entrySet()) {
-                                        if (j < timetableItemCount) {
-                                            int key = e.getKey();
-                                            String val = e.getValue();
-                                            sb.append(note + ": " + val).append("\n");
-                                            j++;
+                                            String railDirection;
+                                            try {
+                                                if (dataObject.has("odpt:railDirectionTitle"))
+                                                    railDirection = dataObject.getString("odpt:railDirectionTitle");
+                                                else
+                                                    railDirection = getTitle(context, dataObject.getString("odpt:railDirection"));
+                                            } catch (Exception e) {
+                                                railDirection = getTitle(context, dataObject.getString("odpt:railDirection"));
+                                            }
+
+                                            String note = station + (station.endsWith("駅") ? "" : "駅") + " " + //
+                                                    railway + (railway.endsWith("線") ? "" : "線") + " " + //
+                                                    railDirection;
+                                            if (OdptKey.IS_DEBUG)
+                                                Log.v("TTW", "note: " + note + " " + railDirection);
+
+                                            // String stationTimetableObject_ = dataObject.getString("odpt:stationTimetableObject");
+                                            JSONArray stationTimetableObjectArray = dataObject.getJSONArray("odpt:stationTimetableObject");
+
+                                            TreeMap<Integer, String> table = stationTimetableObjectArrayToTreeMap(context, stationTimetableObjectArray, marginMinute);
+
+                                            int j = 0;
+                                            for (Map.Entry<Integer, String> e : table.entrySet()) {
+                                                if (j < timetableItemCount) {
+                                                    int key = e.getKey();
+                                                    String val = e.getValue();
+                                                    sb.append(note + ": " + val).append("\n");
+                                                    j++;
+                                                }
+                                            }
                                         }
+                                    } catch (Exception e) {
                                     }
+
+                                    if (OdptKey.IS_DEBUG) Log.v("TTW", "sb: " + sb.toString());
+
+                                    if (!sb.toString().equals(""))
+                                        TimeTableWidget.updateAppWidget(context, sb.toString());
                                 }
-                            } catch (Exception e) {
-                            }
-
-                            // Log.v("TTW", "sb: " + sb.toString());
-
-                            TimeTableWidget.updateAppWidget(context, sb.toString());
+                            }).start();
+                        } catch (Exception e) {
                         }
-                    }).start();
                 }
             });
             asyncDlTask.execute(url);

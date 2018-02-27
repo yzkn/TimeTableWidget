@@ -17,6 +17,7 @@ public class HeartRailsUtil {
     public static final String BASE_URI = "http://express.heartrails.com/api/";
 
     public void acquirePlaces(final Context context, Map<String, String> querys) {
+        if (OdptKey.IS_DEBUG) Log.v("TTW", "acquirePlaces()");
         String endPoint = "json";
 
         try {
@@ -32,34 +33,36 @@ public class HeartRailsUtil {
                 }
 
                 public void onPostExecute(String[] result) {
-                    // Log.v("TTW", result[0]);
+                    if (OdptKey.IS_DEBUG) Log.v("TTW", result[0]);
 
-                    try {
-                        JSONObject json = new JSONObject(result[0]);
-                        JSONArray dataArray = json.getJSONObject("response").getJSONArray("station");
+                    if (!result[0].equals(""))
+                        try {
+                            JSONObject json = new JSONObject(result[0]);
+                            JSONArray dataArray = json.getJSONObject("response").getJSONArray("station");
 
-                        Integer min = Integer.MAX_VALUE;
-                        String uriStation ="";
-                        for (int i = 0; i < dataArray.length(); i++) {
-                            JSONObject dataObject = dataArray.getJSONObject(i);
-                            String uriDistance = dataObject.getString("distance");
-                            try{
-                                int d = Integer.parseInt(uriDistance.replace("m",""));
-                                if(d<min) {
-                                    min = d;
-                                    uriStation = dataObject.getString("name");
+                            Integer min = Integer.MAX_VALUE;
+                            String uriStation = "";
+                            for (int i = 0; i < dataArray.length(); i++) {
+                                JSONObject dataObject = dataArray.getJSONObject(i);
+                                String uriDistance = dataObject.getString("distance");
+                                try {
+                                    int d = Integer.parseInt(uriDistance.replace("m", ""));
+                                    if (d < min) {
+                                        min = d;
+                                        uriStation = dataObject.getString("name");
+                                    }
+                                } catch (NumberFormatException e) {
                                 }
-                            }catch(NumberFormatException e){
                             }
+                            if (!uriStation.equals("")) {
+                                Map<String, String> querysAcquireStation = new HashMap<String, String>();
+                                querysAcquireStation.put("dc:title", uriStation);
+                                if (OdptKey.IS_DEBUG)
+                                    Log.v("TTW", "HRU uriStation: " + uriStation + " : " + min + "m");
+                                (new OdptUtil()).acquireStation(context, querysAcquireStation);
+                            }
+                        } catch (JSONException e) {
                         }
-                        if(!uriStation.equals("")) {
-                            Map<String, String> querysAcquireStation = new HashMap<String, String>();
-                            querysAcquireStation.put("dc:title", uriStation);
-                            // Log.v("TTW", "HRU uriStation: " + uriStation + " : " + min +"m");
-                            (new OdptUtil()).acquireStation(context, querysAcquireStation);
-                        }
-                    } catch (JSONException e) {
-                    }
                 }
             });
             aAsyncDlTask.execute(url);
