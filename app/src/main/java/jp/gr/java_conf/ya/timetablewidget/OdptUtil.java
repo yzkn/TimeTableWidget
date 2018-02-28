@@ -320,21 +320,34 @@ public class OdptUtil {
                     if (!result[0].equals(""))
                         try {
                             JSONObject json = new JSONObject(HEADER + result[0] + FOOTER);
-                            JSONArray dataArray = json.getJSONArray("data");
+                            final JSONArray dataArray = json.getJSONArray("data");
 
-                            for (int i = 0; i < dataArray.length(); i++) {
-                                JSONObject dataObject = dataArray.getJSONObject(i);
-                                Location currentLocation = GeoUtil.createLocation(PrefUtil.loadOdptPref(context, PREF_CURRENT_LAT), PrefUtil.loadOdptPref(context, PREF_CURRENT_LON));
-                                Location stationLocation = GeoUtil.createLocation(dataObject.getString("lat"), dataObject.getString("lon"));
-                                int marginMinute = GeoUtil.getMinutes(currentLocation.distanceTo(stationLocation));
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    StringBuilder sb = new StringBuilder();
 
-                                String uriStation = dataObject.getString("owl:sameAs");
-                                Map<String, String> querysAcquireStation = new HashMap<String, String>();
-                                querysAcquireStation.put("odpt:station", uriStation);
-                                querysAcquireStation.put("odpt:calendar", PrefUtil.checkIfTodayIsHoliday(context));
-                                (new OdptUtil()).acquireStationTimetable(context, querysAcquireStation, marginMinute);
-                                break;
-                            }
+                                    for (int i = 0; i < dataArray.length(); i++) {
+                                        try {
+                                            JSONObject dataObject = dataArray.getJSONObject(i);
+                                            Location currentLocation = GeoUtil.createLocation(PrefUtil.loadOdptPref(context, PREF_CURRENT_LAT), PrefUtil.loadOdptPref(context, PREF_CURRENT_LON));
+                                            Location stationLocation = GeoUtil.createLocation(dataObject.getString("lat"), dataObject.getString("lon"));
+                                            int marginMinute = GeoUtil.getMinutes(currentLocation.distanceTo(stationLocation));
+
+                                            String uriStation = dataObject.getString("owl:sameAs");
+                                            Map<String, String> querysAcquireStation = new HashMap<String, String>();
+                                            querysAcquireStation.put("odpt:station", uriStation);
+                                            querysAcquireStation.put("odpt:calendar", PrefUtil.checkIfTodayIsHoliday(context));
+                                            sb.append(acquireStationTimetable(context, querysAcquireStation, marginMinute));
+                                        } catch (JSONException e) {
+                                        }
+                                    }
+
+                                    if (OdptKey.IS_DEBUG) Log.v("TTW", "sb: " + sb.toString());
+                                    if (!sb.toString().equals(""))
+                                        TimeTableWidget.updateAppWidget(context, sb.toString());
+                                }
+                            }).start();
                         } catch (JSONException e) {
                         }
                 }
@@ -367,24 +380,37 @@ public class OdptUtil {
                     if (!result[0].equals(""))
                         try {
                             JSONObject json = new JSONObject(HEADER + result[0] + FOOTER);
-                            JSONArray dataArray = json.getJSONArray("data");
+                            final JSONArray dataArray = json.getJSONArray("data");
 
-                            for (int i = 0; i < dataArray.length(); i++) {
-                                JSONObject dataObject = dataArray.getJSONObject(i);
-                                Location currentLocation = GeoUtil.createLocation(PrefUtil.loadOdptPref(context, PREF_CURRENT_LAT), PrefUtil.loadOdptPref(context, PREF_CURRENT_LON));
-                                Location stationLocation = GeoUtil.createLocation(dataObject.getString("geo:lat"), dataObject.getString("geo:long"));
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    StringBuilder sb = new StringBuilder();
 
-                                if (currentLocation != null && stationLocation != null) {
-                                    int marginMinute = GeoUtil.getMinutes(currentLocation.distanceTo(stationLocation));
+                                    for (int i = 0; i < dataArray.length(); i++) {
+                                        try {
+                                            JSONObject dataObject = dataArray.getJSONObject(i);
+                                            Location currentLocation = GeoUtil.createLocation(PrefUtil.loadOdptPref(context, PREF_CURRENT_LAT), PrefUtil.loadOdptPref(context, PREF_CURRENT_LON));
+                                            Location stationLocation = GeoUtil.createLocation(dataObject.getString("geo:lat"), dataObject.getString("geo:long"));
 
-                                    String uriStation = dataObject.getString("owl:sameAs");
-                                    Map<String, String> querysAcquireStation = new HashMap<String, String>();
-                                    querysAcquireStation.put("odpt:station", uriStation);
-                                    querysAcquireStation.put("odpt:calendar", PrefUtil.checkIfTodayIsHoliday(context));
-                                    (new OdptUtil()).acquireStationTimetable(context, querysAcquireStation, marginMinute);
-                                    break;
+                                            if (currentLocation != null && stationLocation != null) {
+                                                int marginMinute = GeoUtil.getMinutes(currentLocation.distanceTo(stationLocation));
+
+                                                String uriStation = dataObject.getString("owl:sameAs");
+                                                Map<String, String> querysAcquireStation = new HashMap<String, String>();
+                                                querysAcquireStation.put("odpt:station", uriStation);
+                                                querysAcquireStation.put("odpt:calendar", PrefUtil.checkIfTodayIsHoliday(context));
+                                                sb.append(acquireStationTimetable(context, querysAcquireStation, marginMinute));
+                                            }
+                                        } catch (JSONException e) {
+                                        }
+                                    }
+
+                                    if (OdptKey.IS_DEBUG) Log.v("TTW", "sb: " + sb.toString());
+                                    if (!sb.toString().equals(""))
+                                        TimeTableWidget.updateAppWidget(context, sb.toString());
                                 }
-                            }
+                            }).start();
                         } catch (JSONException e) {
                         }
                 }
@@ -454,7 +480,7 @@ public class OdptUtil {
         return table;
     }
 
-    public void acquireStationTimetable(final Context context, Map<String, String> querys, final int marginMinute) {
+    public String acquireStationTimetable(final Context context, Map<String, String> querys, final int marginMinute) {
         String endPoint = "odpt:StationTimetable";
 
         try {
@@ -462,109 +488,115 @@ public class OdptUtil {
                 Log.v("TTW", "acquireStationTimetable: " + buildQueryString(BASE_URI + endPoint, querys));
             final URL url = new URL(buildQueryString(BASE_URI + endPoint,
                     querys));
-            AsyncDlTask asyncDlTask = new AsyncDlTask(new AsyncDlTask.AsyncCallback() {
-                public void onPreExecute() {
-                }
+            // AsyncDlTask asyncDlTask = new AsyncDlTask(new AsyncDlTask.AsyncCallback() {
+            //     public void onPreExecute() {
+            //     }
 
-                public void onProgressUpdate(int progress) {
-                }
+            //     public void onProgressUpdate(int progress) {
+            //     }
 
-                public void onCancelled() {
-                }
+            //     public void onCancelled() {
+            //     }
 
-                public void onPostExecute(final String[] result) {
-                    if (OdptKey.IS_DEBUG) Log.v("TTW", "acquireStationTimetable: " + result[0]);
+            //     public void onPostExecute(final String[] result) {
 
-                    if (!result[0].equals(""))
-                        try {
-                            new Thread(new Runnable() {
-                                @Override
-                                public void run() {
+            // Sync
+            String result = AsyncDlTask.downloadText(url, "UTF-8");
+            if (OdptKey.IS_DEBUG) Log.v("TTW", "getTitle result:" + result);
 
-                                    StringBuilder sb = new StringBuilder();
+            if (!result.equals(""))
+                try {
+                    // new Thread(new Runnable() {
+                    //     @Override
+                    //     public void run() {
 
-                                    // Date dateAdd = getT0day(marginMinute).getTime();
-                                    final SimpleDateFormat df = new SimpleDateFormat("HH:mm");
+                    StringBuilder sb = new StringBuilder();
 
-                                    try {
-                                        Date date0400 = df.parse("04:00");
+                    // Date dateAdd = getT0day(marginMinute).getTime();
+                    final SimpleDateFormat df = new SimpleDateFormat("HH:mm");
 
-                                        JSONObject json = new JSONObject(HEADER + result[0] + FOOTER);
-                                        JSONArray dataArray = json.getJSONArray("data");
+                    try {
+                        Date date0400 = df.parse("04:00");
 
-                                        for (int i = 0; i < dataArray.length(); i++) {
-                                            JSONObject dataObject = dataArray.getJSONObject(i);
+                        JSONObject json = new JSONObject(HEADER + result + FOOTER);
+                        JSONArray dataArray = json.getJSONArray("data");
+
+                        for (int i = 0; i < dataArray.length(); i++) {
+                            JSONObject dataObject = dataArray.getJSONObject(i);
 
 
-                                            String railway;
-                                            try {
-                                                if (dataObject.has("odpt:railwayTitle"))
-                                                    railway = dataObject.getString("odpt:railwayTitle");
-                                                else
-                                                    railway = getTitle(context, dataObject.getString("odpt:railway"));
-                                            } catch (Exception e) {
-                                                railway = getTitle(context, dataObject.getString("odpt:railway"));
-                                            }
+                            String railway;
+                            try {
+                                if (dataObject.has("odpt:railwayTitle"))
+                                    railway = dataObject.getString("odpt:railwayTitle");
+                                else
+                                    railway = getTitle(context, dataObject.getString("odpt:railway"));
+                            } catch (Exception e) {
+                                railway = getTitle(context, dataObject.getString("odpt:railway"));
+                            }
 
-                                            String station;
-                                            try {
-                                                if (dataObject.has("odpt:stationTitle"))
-                                                    station = dataObject.getString("odpt:stationTitle");
-                                                else
-                                                    station = getTitle(context, dataObject.getString("odpt:station"));
-                                            } catch (Exception e) {
-                                                station = getTitle(context, dataObject.getString("odpt:station"));
-                                            }
+                            String station;
+                            try {
+                                if (dataObject.has("odpt:stationTitle"))
+                                    station = dataObject.getString("odpt:stationTitle");
+                                else
+                                    station = getTitle(context, dataObject.getString("odpt:station"));
+                            } catch (Exception e) {
+                                station = getTitle(context, dataObject.getString("odpt:station"));
+                            }
 
-                                            String calendar = dataObject.getString("odpt:calendar");
-                                            String operator = dataObject.getString("odpt:operator");
+                            String calendar = dataObject.getString("odpt:calendar");
+                            String operator = dataObject.getString("odpt:operator");
 
-                                            String railDirection;
-                                            try {
-                                                if (dataObject.has("odpt:railDirectionTitle"))
-                                                    railDirection = dataObject.getString("odpt:railDirectionTitle");
-                                                else
-                                                    railDirection = getTitle(context, dataObject.getString("odpt:railDirection"));
-                                            } catch (Exception e) {
-                                                railDirection = getTitle(context, dataObject.getString("odpt:railDirection"));
-                                            }
+                            String railDirection;
+                            try {
+                                if (dataObject.has("odpt:railDirectionTitle"))
+                                    railDirection = dataObject.getString("odpt:railDirectionTitle");
+                                else
+                                    railDirection = getTitle(context, dataObject.getString("odpt:railDirection"));
+                            } catch (Exception e) {
+                                railDirection = getTitle(context, dataObject.getString("odpt:railDirection"));
+                            }
 
-                                            String note = station + (station.endsWith("駅") ? "" : "駅") + " " + //
-                                                    railway + (railway.endsWith("線") ? "" : "線") + " " + //
-                                                    railDirection;
-                                            if (OdptKey.IS_DEBUG)
-                                                Log.v("TTW", "note: " + note + " " + railDirection);
+                            String note = station + (station.endsWith("駅") ? "" : "駅") + " " + //
+                                    railway + (railway.endsWith("線") ? "" : "線") + " " + //
+                                    railDirection;
+                            if (OdptKey.IS_DEBUG)
+                                Log.v("TTW", "note: " + note + " " + railDirection);
 
-                                            // String stationTimetableObject_ = dataObject.getString("odpt:stationTimetableObject");
-                                            JSONArray stationTimetableObjectArray = dataObject.getJSONArray("odpt:stationTimetableObject");
+                            JSONArray stationTimetableObjectArray = dataObject.getJSONArray("odpt:stationTimetableObject");
 
-                                            TreeMap<Integer, String> table = stationTimetableObjectArrayToTreeMap(context, stationTimetableObjectArray, marginMinute);
+                            TreeMap<Integer, String> table = stationTimetableObjectArrayToTreeMap(context, stationTimetableObjectArray, marginMinute);
 
-                                            int j = 0;
-                                            for (Map.Entry<Integer, String> e : table.entrySet()) {
-                                                if (j < timetableItemCount) {
-                                                    int key = e.getKey();
-                                                    String val = e.getValue();
-                                                    sb.append(note + ": " + val).append("\n");
-                                                    j++;
-                                                }
-                                            }
-                                        }
-                                    } catch (Exception e) {
-                                    }
-
-                                    if (OdptKey.IS_DEBUG) Log.v("TTW", "sb: " + sb.toString());
-
-                                    if (!sb.toString().equals(""))
-                                        TimeTableWidget.updateAppWidget(context, sb.toString());
+                            int j = 0;
+                            for (Map.Entry<Integer, String> e : table.entrySet()) {
+                                if (j < timetableItemCount) {
+                                    int key = e.getKey();
+                                    String val = e.getValue();
+                                    sb.append(note + ": " + val).append("\n");
+                                    j++;
                                 }
-                            }).start();
-                        } catch (Exception e) {
+                            }
                         }
+                    } catch (Exception e) {
+                    }
+
+                    // if (OdptKey.IS_DEBUG) Log.v("TTW", "sb: " + sb.toString());
+                    // if (!sb.toString().equals(""))
+                    //     TimeTableWidget.updateAppWidget(context, sb.toString());
+
+                    return sb.toString();
+
+                    //     }
+                    // }).start();
+                } catch (Exception e) {
                 }
-            });
-            asyncDlTask.execute(url);
+            //     }
+            // });
+            // asyncDlTask.execute(url);
         } catch (Exception e) {
         }
+
+        return "";
     }
 }
