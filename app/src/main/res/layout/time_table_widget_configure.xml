@@ -11,11 +11,19 @@
         android:layout_marginBottom="8dp"
         android:text="@string/configure" />
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="@string/add_widget_title" />
+
     <EditText
         android:id="@+id/appwidget_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="text" />
+        android:inputType="text"
+        android:text=""
+        android:hint="@string/add_widget_title_hint" />
 
     <Button
         android:id="@+id/add_button"

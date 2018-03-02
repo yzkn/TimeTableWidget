@@ -8,6 +8,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -41,13 +42,13 @@ import java.util.Map;
 import static jp.gr.java_conf.ya.timetablewidget.OdptUtil.getDateString;
 
 public class TimeTableWidgetService extends Service {
-    private static final SimpleDateFormat sdFormatLoad = new SimpleDateFormat("yyyy-MM-dd");
-    private static final String ACTION_TIMER_TICK = "ACTION_TIMER_TICK";
-    private static final String URL_HOLIDAYS = "http://www8.cao.go.jp/chosei/shukujitsu/syukujitsu_kyujitsu.csv";
-    private Boolean requestingLocationUpdates;
-    private long intervall_fast = 3 * 60 * 1000;
-    private long intervall_norm = 10 * 60 * 1000;
-    private long intervall_slow = 20 * 60 * 1000;
+    public static final SimpleDateFormat sdFormatLoad = new SimpleDateFormat("yyyy-MM-dd");
+    public static final String ACTION_TIMER_TICK = "ACTION_TIMER_TICK";
+    public static final String URL_HOLIDAYS = "http://www8.cao.go.jp/chosei/shukujitsu/syukujitsu_kyujitsu.csv";
+    private Boolean requestingLocationUpdates = false;
+    private long intervall_fast = 1 * 60 * 1000;
+    private long intervall_norm = 3 * 60 * 1000;
+    private long intervall_slow = 5 * 60 * 1000;
     private SettingsClient settingsClient;
 
     public TimeTableWidgetService() {
@@ -199,7 +200,12 @@ public class TimeTableWidgetService extends Service {
                 if (OdptKey.IS_DEBUG)
                     Log.v("TTWS", "onStartCommand() (intent.getAction() != null)");
                 if (ACTION_TIMER_TICK.equals(intent.getAction())) {
-                    timer_tick();
+                    int appWidgetId = -1;
+                    try {
+                        appWidgetId = intent.getExtras().getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
+                    } catch (Exception e) {
+                    }
+                    timer_tick(appWidgetId);
                     return START_STICKY;
                 } else {
                     if (OdptKey.IS_DEBUG) Log.v("TTWS", intent.getAction());
@@ -227,16 +233,26 @@ public class TimeTableWidgetService extends Service {
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
 
-                Location location = locationResult.getLastLocation();
-                if (OdptKey.IS_DEBUG)
-                    Log.v("TTWS", "location getLatitude: " + location.getLatitude());
-                if (OdptKey.IS_DEBUG)
-                    Log.v("TTWS", "location getLongitude: " + location.getLongitude());
-                String lat = Double.toString(location.getLatitude());
-                String lon = Double.toString(location.getLongitude());
-                PrefUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LAT, lat);
-                PrefUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LON, lon);
-                callApi(lat, lon);
+                ComponentName thisWidget = new ComponentName(TimeTableWidgetService.this, TimeTableWidget.class);
+                int[] appWidgetIds = AppWidgetManager.getInstance(TimeTableWidgetService.this).getAppWidgetIds(thisWidget);
+                for (int appWidgetId : appWidgetIds) {
+                    String title = PrefUtil.loadTitlePref(TimeTableWidgetService.this, appWidgetId);
+                    if (OdptKey.IS_DEBUG) Log.v("TTWS", "createLocationCallback()　appWidgetId: "+appWidgetId + " title: "+title);
+                    if (PrefUtil.checkIfWantToUseGps(title)) {
+                        Location location = locationResult.getLastLocation();
+                        if (OdptKey.IS_DEBUG)
+                            Log.v("TTWS", "location getLatitude: " + location.getLatitude());
+                        if (OdptKey.IS_DEBUG)
+                            Log.v("TTWS", "location getLongitude: " + location.getLongitude());
+                        String lat = Double.toString(location.getLatitude());
+                        String lon = Double.toString(location.getLongitude());
+                        PrefUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LAT, lat);
+                        PrefUtil.saveOdptPref(getApplicationContext(), OdptUtil.PREF_CURRENT_LON, lon);
+                        callApi(lat, lon);
+                    } else {
+                        callApi(title);
+                    }
+                }
             }
         };
         return locationCallback;
@@ -257,7 +273,12 @@ public class TimeTableWidgetService extends Service {
 
     private void startLocationUpdates() {
         if (OdptKey.IS_DEBUG) Log.v("TTWS", "startLocationUpdates()");
+        if (requestingLocationUpdates)
+            return;
+
         try {
+            if (settingsClient == null)
+                settingsClient = LocationServices.getSettingsClient(this);
             settingsClient.checkLocationSettings(createLocationSettingsRequest());
             FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
             fusedLocationClient.requestLocationUpdates(
@@ -297,6 +318,14 @@ public class TimeTableWidgetService extends Service {
         */
     }
 
+    private void callApi(String uriStation) {
+        Map<String, String> querysAcquireStation = new HashMap<String, String>();
+        querysAcquireStation.put("dc:title", uriStation);
+        if (OdptKey.IS_DEBUG)
+            Log.v("TTW", "TTWS uriStation: " + uriStation);
+        (new OdptUtil()).acquireStation(TimeTableWidgetService.this, querysAcquireStation, true);
+    }
+
     private PendingIntent getPendingIntent() {
         Intent intent = new Intent(this, TimeTableWidgetService.class);
         intent.setAction(ACTION_TIMER_TICK);
@@ -315,15 +344,17 @@ public class TimeTableWidgetService extends Service {
         // 休日判定
         setHoliday(this);
 
-//        PrefUtil.saveOdptPref(this, OdptUtil.PREF_CURRENT_LAT, "35.67512");
-//        PrefUtil.saveOdptPref(this, OdptUtil.PREF_CURRENT_LON, "139.775336");
-//        callApi("35.67512", "139.775336");
-
         // 測位開始
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            settingsClient = LocationServices.getSettingsClient(this);
+            if (settingsClient == null)
+                settingsClient = LocationServices.getSettingsClient(this);
             createLocationSettingsRequest();
             startLocationUpdates();
+        }
+
+        String title = PrefUtil.loadTitlePref(this, appWidgetId);
+        if (!PrefUtil.checkIfWantToUseGps(title)) {
+            callApi(title);
         }
 
         // 次回起動
@@ -351,12 +382,17 @@ public class TimeTableWidgetService extends Service {
             alarmManager.cancel(pendingIntent);
     }
 
-    private void timer_tick() {
+    public void timer_tick(int appWidgetId) {
         if (OdptKey.IS_DEBUG) Log.v("TTWS", "timer_tick");
 
-        String lat = PrefUtil.loadOdptPref(this, OdptUtil.PREF_CURRENT_LAT);
-        String lon = PrefUtil.loadOdptPref(this, OdptUtil.PREF_CURRENT_LON);
-        callApi(lat, lon);
+        String title = PrefUtil.loadTitlePref(this, appWidgetId);
+        if (PrefUtil.checkIfWantToUseGps(title)) {
+            String lat = PrefUtil.loadOdptPref(this, OdptUtil.PREF_CURRENT_LAT);
+            String lon = PrefUtil.loadOdptPref(this, OdptUtil.PREF_CURRENT_LON);
+            callApi(lat, lon);
+        }else{
+            callApi(title);
+        }
 
         setNextAlarmService(this);
     }

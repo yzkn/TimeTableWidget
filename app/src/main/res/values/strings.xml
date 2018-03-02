@@ -3,4 +3,6 @@
     <string name="appwidget_text">TimeTableWidget</string>
     <string name="configure">Configure</string>
     <string name="add_widget">Add widget</string>
+    <string name="add_widget_title">空欄の場合は現在地最寄駅の時刻表、駅名の場合はその駅の時刻表を表示</string>
+    <string name="add_widget_title_hint">空欄 or 駅名(例：「新宿」)</string>
 </resources><!-- Copyright (c) 2018 YA <ya.androidapp@gmail.com> All rights reserved. -->

@@ -59,7 +59,7 @@ public class HeartRailsUtil {
                                 querysAcquireStation.put("dc:title", uriStation);
                                 if (OdptKey.IS_DEBUG)
                                     Log.v("TTW", "HRU uriStation: " + uriStation + " : " + min + "m");
-                                (new OdptUtil()).acquireStation(context, querysAcquireStation);
+                                (new OdptUtil()).acquireStation(context, querysAcquireStation, false);
                             }
                         } catch (JSONException e) {
                         }

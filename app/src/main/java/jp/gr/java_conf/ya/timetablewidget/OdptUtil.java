@@ -119,6 +119,13 @@ public class OdptUtil {
             // } else if (key.equals("odpt.RailDirection:TokyoMetro.Wakoshi")) {
             // return "和光市方面";
 
+        } else if (key.equals("odpt.Station:Hokuso.Hokuso.ImbaNihonIdai")) {
+            return "印旛日本医大";
+        } else if (key.equals("odpt.Station:Hokuso.Hokuso.InzaiMakinohara")) {
+            return "印西牧の原";
+        } else if (key.equals("odpt.Station:Shibayama.Shibayama.ShibayamaChiyoda")) {
+            return "芝山千代田";
+
         } else if (key.equals("odpt.TrainType:")) {
 
             //
@@ -357,7 +364,7 @@ public class OdptUtil {
         }
     }
 
-    public void acquireStation(final Context context, Map<String, String> querys) {
+    public void acquireStation(final Context context, Map<String, String> querys, final boolean saveStationLocation) {
         String endPoint = "odpt:Station";
         if (OdptKey.IS_DEBUG)
             Log.v("TTW", "acquireStation " + buildQueryString(BASE_URI + endPoint, querys));
@@ -387,6 +394,7 @@ public class OdptUtil {
                                 public void run() {
                                     StringBuilder sb = new StringBuilder();
 
+                                    boolean first = true;
                                     for (int i = 0; i < dataArray.length(); i++) {
                                         try {
                                             JSONObject dataObject = dataArray.getJSONObject(i);
@@ -401,6 +409,14 @@ public class OdptUtil {
                                                 querysAcquireStation.put("odpt:station", uriStation);
                                                 querysAcquireStation.put("odpt:calendar", PrefUtil.checkIfTodayIsHoliday(context));
                                                 sb.append(acquireStationTimetable(context, querysAcquireStation, marginMinute));
+
+                                                if(first && saveStationLocation){
+                                                    String lat = Double.toString(stationLocation.getLatitude());
+                                                    String lon = Double.toString(stationLocation.getLongitude());
+                                                    PrefUtil.saveOdptPref(context, OdptUtil.PREF_CURRENT_LAT, lat);
+                                                    PrefUtil.saveOdptPref(context, OdptUtil.PREF_CURRENT_LON, lon);
+                                                    first = false;
+                                                }
                                             }
                                         } catch (JSONException e) {
                                         }

@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
 import java.util.Date;
+import java.util.Locale;
 
 public class PrefUtil {
     public static final String PREF_TODAY = "PREF_TODAY";
@@ -58,6 +59,17 @@ public class PrefUtil {
 
     static void deleteTitlePref(Context context, int appWidgetId) {
         deletePref(context, PREF_PREFIX_KEY + appWidgetId);
+    }
+
+    public static boolean checkIfWantToUseGps(String title) {
+        if (title.equals(""))
+            return true;
+        else if (title.toLowerCase(Locale.ENGLISH).contains("here"))
+            return true;
+        else if (title.toLowerCase(Locale.ENGLISH).contains("gps"))
+            return true;
+        else
+            return false;
     }
 
 

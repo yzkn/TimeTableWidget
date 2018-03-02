@@ -2,6 +2,8 @@ package jp.gr.java_conf.ya.timetablewidget; // Copyright (c) 2018 YA <ya.android
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
@@ -29,6 +31,17 @@ public class TimeTableWidgetConfigureActivity extends Activity {
 
             AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
             TimeTableWidget.updateAppWidget(context, appWidgetManager, mAppWidgetId, "");
+
+            Intent intent = new Intent(TimeTableWidgetConfigureActivity.this, TimeTableWidgetService.class);
+            intent.setAction(TimeTableWidgetService.ACTION_TIMER_TICK);
+            PendingIntent pendingIntent = PendingIntent.getService(TimeTableWidgetConfigureActivity.this, 0, intent, 0);
+            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+
+            if (alarmManager != null)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, 1000, pendingIntent);
+                else
+                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, 1000, pendingIntent);
 
             Intent resultValue = new Intent();
             resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
