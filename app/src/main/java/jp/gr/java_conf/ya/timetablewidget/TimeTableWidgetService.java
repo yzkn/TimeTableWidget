@@ -303,19 +303,18 @@ public class TimeTableWidgetService extends Service {
 
     private void callApi(String lat, String lon) {
         if (OdptKey.IS_DEBUG) Log.v("TTWS", "callApi()");
+        /*
         Map<String, String> queryAcquirePlaces = new HashMap<String, String>();
         queryAcquirePlaces.put("x", lon);
         queryAcquirePlaces.put("y", lat);
         queryAcquirePlaces.put("method", "getStations");
         (new HeartRailsUtil()).acquirePlaces(this, queryAcquirePlaces);
-        /*
+        */
         Map<String, String> queryAcquirePlaces = new HashMap<String, String>();
-        queryAcquirePlaces.put("rdf:type", "odpt:Station");
         queryAcquirePlaces.put("lon", lon);
         queryAcquirePlaces.put("lat", lat);
-        queryAcquirePlaces.put("radius", "1000");
-        (new OdptUtil()).acquirePlaces(queryAcquirePlaces);
-        */
+        queryAcquirePlaces.put("radius", "2000");
+        (new OdptUtil()).acquirePlaces(this, queryAcquirePlaces, false);
     }
 
     private void callApi(String uriStation) {

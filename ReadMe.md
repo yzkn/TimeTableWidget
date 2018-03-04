@@ -15,7 +15,7 @@ TimeTableWidget
 ## インストール方法
 ---
 
-APKファイルを [Google Play](https://play.google.com/store/apps/details?id=jp.gr.java_conf.ya.timetablewidget) または [github](https://github.com/YA-androidapp/TTW/blob/master/TTW.apk?raw=true) からダウンロードして、インストールしてください。
+APKファイルを [Google Play](https://play.google.com/store/apps/details?id=jp.gr.java_conf.ya.timetablewidget) または [github](https://github.com/YA-androidapp/TTW/blob/master/app/release/app-release.apk?raw=true) からダウンロードして、インストールしてください。
 
 ## 使用しているAPI
 ---
@@ -25,10 +25,6 @@ APKファイルを [Google Play](https://play.google.com/store/apps/details?id=j
 > 本アプリケーション等が利用する公共交通データは、東京公共交通オープンデータチャレンジにおいて提供されるものです。
 > 公共交通事業者により提供されたデータを元にしていますが、必ずしも正確・完全なものとは限りません。本アプリケーションの表示内容について、公共交通事業者への直接の問合せは行わないでください。
 > 本アプリケーションに関するお問い合わせは、GitHubページにお願いします。
-
-### [HeartRails Express](http://express.heartrails.com/api.html)
-
-東京公共交通オープンデータチャレンジの地物情報検索APIが公開されるまで、暫定的に使用しています。
 
 ## ライセンス
 ---

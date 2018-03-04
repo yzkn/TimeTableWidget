@@ -25,6 +25,7 @@ public class OdptUtil {
     public static final String FOOTER = "}";
     public static final String PREF_CURRENT_LAT = "PREF_CURRENT_LAT";
     public static final String PREF_CURRENT_LON = "PREF_CURRENT_LON";
+    private static final int stationItemCount = 5;
     private static final int timetableItemCount = 3;
     private static final int startHourOfDay = 4;
     private static final int commonMarginMinute = 10;
@@ -306,8 +307,8 @@ public class OdptUtil {
         return calendar;
     }
 
-    public void acquirePlaces(final Context context, Map<String, String> querys) {
-        String endPoint = "places";
+    public void acquirePlaces(final Context context, Map<String, String> querys, final boolean saveStationLocation) {
+        String endPoint = "places/odpt:Station";
 
         try {
             final URL url = new URL(buildQueryString(BASE_URI + endPoint, querys));
@@ -334,20 +335,55 @@ public class OdptUtil {
                                 public void run() {
                                     StringBuilder sb = new StringBuilder();
 
+                                    TreeMap<Float, StrLoc> distUris = new TreeMap<>();
+
                                     for (int i = 0; i < dataArray.length(); i++) {
                                         try {
                                             JSONObject dataObject = dataArray.getJSONObject(i);
                                             Location currentLocation = GeoUtil.createLocation(PrefUtil.loadOdptPref(context, PREF_CURRENT_LAT), PrefUtil.loadOdptPref(context, PREF_CURRENT_LON));
-                                            Location stationLocation = GeoUtil.createLocation(dataObject.getString("lat"), dataObject.getString("lon"));
-                                            int marginMinute = GeoUtil.getMinutes(currentLocation.distanceTo(stationLocation));
+                                            Location stationLocation = GeoUtil.createLocation(dataObject.getString("geo:lat"), dataObject.getString("geo:long"));
 
-                                            String uriStation = dataObject.getString("owl:sameAs");
+                                            if (currentLocation != null && stationLocation != null) {
+                                                float dist = currentLocation.distanceTo(stationLocation);
+                                                String uriStation = dataObject.getString("owl:sameAs");
+                                                distUris.put(dist, new StrLoc(uriStation, stationLocation));
+                                                if (OdptKey.IS_DEBUG) Log.v("TTW", "for1: distUris: "+Float.toString(dist)+" , "+uriStation);
+                                            }
+                                        } catch (JSONException e) {
+                                        }
+                                    }
+
+                                    // 距離が近い順にソート(TreeMap)
+
+                                    int j = 0;
+                                    boolean first = true;
+                                    for (Map.Entry<Float, StrLoc> e : distUris.entrySet()) {
+                                        float dist = e.getKey();
+                                        String uriStation = e.getValue().getStr();
+                                        Location stationLocation = e.getValue().getLoc();
+                                        try {
+                                            int marginMinute = GeoUtil.getMinutes(dist);
                                             Map<String, String> querysAcquireStation = new HashMap<String, String>();
                                             querysAcquireStation.put("odpt:station", uriStation);
                                             querysAcquireStation.put("odpt:calendar", PrefUtil.checkIfTodayIsHoliday(context));
                                             sb.append(acquireStationTimetable(context, querysAcquireStation, marginMinute));
-                                        } catch (JSONException e) {
+
+                                            if (first && saveStationLocation) {
+                                                String lat = Double.toString(stationLocation.getLatitude());
+                                                String lon = Double.toString(stationLocation.getLongitude());
+                                                PrefUtil.saveOdptPref(context, OdptUtil.PREF_CURRENT_LAT, lat);
+                                                PrefUtil.saveOdptPref(context, OdptUtil.PREF_CURRENT_LON, lon);
+                                                first = false;
+                                            }
+                                        } catch (Exception e2) {
                                         }
+                                        if (OdptKey.IS_DEBUG) Log.v("TTW", "for2: distUris: "+Float.toString(dist)+" , "+uriStation);
+
+
+                                        if(j>=stationItemCount)
+                                            break;
+
+                                        j++;
                                     }
 
                                     if (OdptKey.IS_DEBUG) Log.v("TTW", "sb: " + sb.toString());
@@ -403,14 +439,13 @@ public class OdptUtil {
 
                                             if (currentLocation != null && stationLocation != null) {
                                                 int marginMinute = GeoUtil.getMinutes(currentLocation.distanceTo(stationLocation));
-
                                                 String uriStation = dataObject.getString("owl:sameAs");
                                                 Map<String, String> querysAcquireStation = new HashMap<String, String>();
                                                 querysAcquireStation.put("odpt:station", uriStation);
                                                 querysAcquireStation.put("odpt:calendar", PrefUtil.checkIfTodayIsHoliday(context));
                                                 sb.append(acquireStationTimetable(context, querysAcquireStation, marginMinute));
 
-                                                if(first && saveStationLocation){
+                                                if (first && saveStationLocation) {
                                                     String lat = Double.toString(stationLocation.getLatitude());
                                                     String lon = Double.toString(stationLocation.getLongitude());
                                                     PrefUtil.saveOdptPref(context, OdptUtil.PREF_CURRENT_LAT, lat);
@@ -614,5 +649,24 @@ public class OdptUtil {
         }
 
         return "";
+    }
+
+    class StrLoc {
+        private String str;
+        private Location loc;
+
+        StrLoc(String s, Location l) {
+            str = s;
+            loc = l;
+        }
+
+        public String getStr() {
+            return str;
+        }
+
+        public Location getLoc() {
+            return loc;
+        }
+
     }
 }
