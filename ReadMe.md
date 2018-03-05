@@ -31,6 +31,11 @@ APKファイルを [Google Play](https://play.google.com/store/apps/details?id=j
 
 [Apache License, 2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
+## プライバシーポリシー
+---
+本アプリケーションにより取得される位置情報は、アプリケーションの機能を実現するために必要最小限の範囲で、
+API呼出しの際のパラメータとしてサーバへ渡したり、端末内にキャッシュしたりします。
+
 ## 作者
 ---
 
